@@ -3,7 +3,7 @@ Title: Novel Methods for Missing Values
 Version: 0.0.0.9000
 Authors@R: c(person("Norman", "Matloff", email = "matloff@cs.ucdavis.edu", role = c("aut", "cre")),
            person("Pete", "Mohanty", email = "pete.mohanty@gmail.com",
-           role = c("aut",'cre')))
+           role = c("aut")))
 Description: Non-imputational methods for handling missing values in a
    prediction context.
 Depends: polyreg
