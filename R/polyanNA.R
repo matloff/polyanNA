@@ -12,15 +12,17 @@ polyanNA <- function(x)
 {
    naByCol <- apply(x,2,function(col) any(is.na(col)))
    for (i in 1:ncol(x)) {
-      nm <- names(x)[i]
-      if (is.factor(x[,1])) x[,i] <- addNAlvl(x[,i],nm)
+      if (naByCol[i]) {
+         nm <- names(x)[i]
+         if (is.factor(x[,i])) x[,i] <- addNAlvl(x[,i],nm)
+      }
    }
    x
 }
 
 addNAlvl <- function(f,nm) 
 {
-   f1 <- as.character(f,nm)
+   f1 <- as.character(f)
    f1[is.na(f1)] <- paste0(nm,'.na')
    as.factor(f1)
 }
