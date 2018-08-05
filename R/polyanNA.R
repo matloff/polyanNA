@@ -9,20 +9,21 @@
 # the potential predictive information that an NA value may convey
 
 # if dtz option, then the numeric columns are run through
-# 'discretize' from the 'arules' package
+# 'discretize' 
 
 # to account for multiple interactions, run the result through polyreg
 
 polyanNA <- function(x,dtz=FALSE,breaks=3) 
 {
-   if (dtz) require(discretize)
    naByCol <- apply(x,2,function(col) any(is.na(col)))
    for (i in 1:ncol(x)) {
+      if (is.numeric(x[,i]) && dtz)  
+         x[,i] <- discretize(x[,i],nLevels=breaks)
+   }
+   for (i in 1:ncol(x)) {
       if (naByCol[i]) {  # any NAs in this col?
-         if (dtz)  
-            xi <- discretize(x[,i],infinity=TRUE,breaks=breaks)
          nm <- names(x)[i]
-         if (dtz || is.factor(x[,i])) 
+         if (is.factor(x[,i])) 
             x[,i] <- addNAlvl(x[,i],nm) 
       }
    }
@@ -34,6 +35,23 @@ addNAlvl <- function(f,nm)
    f1 <- as.character(f)
    f1[is.na(f1)] <- paste0(nm,'.na')
    as.factor(f1)
+}
+
+# converts a numeric variable x to a factor with nLevels levels; divides
+# range(x) into equal-width intervals, closed on the right, open on the
+# left; the names of the levels are the right endpoints of the
+# intervals, including the last, which is named 'Inf'
+
+discretize <- function(x,nLevels) {
+   xc <- cut(x,nLevels)
+   lxc <- levels(xc)
+   commaPts <- regexpr(',',lxc)
+   bracketPts <- nchar(lxc)
+   for (i in 1:(length(lxc)-1) ) 
+      levels(xc)[i] <- 
+         substr(lxc[i],commaPts[i]+1,bracketPts[i]-1)
+   levels(xc)[length(lxc)] <- 'Inf'
+   xc
 }
 
 # example
