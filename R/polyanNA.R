@@ -3,37 +3,45 @@
 
 # assumption-free missing value method, for a prediction context
 
-# for each column in the input data frame that is a factor and has at
-# least one NA value, add an 'na' level and recode the NA values to that
-# level; then fit the regression model; that way, one can account for
-# the potential predictive information that an NA value may convey
+# the input data frame xy has Y in column yCol; we'll use x to refer to
+# xy without that column
+
+# for each column in x that is a factor and has at least one NA value,
+# add an 'na' level and recode the NA values to that level; then fit the
+# regression model; that way, one can account for the potential
+# predictive information that an NA value may convey
 
 # if dtz option, then the numeric columns are run through
 # 'discretize' 
 
 # to account for multiple interactions, run the result through polyreg
 
-polyanNA <- function(x,dtz=FALSE,breaks=3) 
+polyanNA <- function(xy,yCol,dtz=FALSE,breaks=5) 
 {
-   naByCol <- apply(x,2,function(col) any(is.na(col)))
+   x <- xy[,-yCol]
    for (i in 1:ncol(x)) {
       if (is.numeric(x[,i]) && dtz)  
          x[,i] <- discretize(x[,i],nLevels=breaks)
    }
+   naByCol <- apply(x,2,function(col) any(is.na(col)))
    for (i in 1:ncol(x)) {
       if (naByCol[i]) {  # any NAs in this col?
-         nm <- names(x)[i]
-         if (is.factor(x[,i])) 
+         if (is.factor(x[,i])) {
+            nm <- names(x)[i]
             x[,i] <- addNAlvl(x[,i],nm) 
+         }
       }
    }
-   x
+   xy[,-yCol] <- x
+   xy
 }
 
+# 
 addNAlvl <- function(f,nm) 
 {
    f1 <- as.character(f)
-   f1[is.na(f1)] <- paste0(nm,'.na')
+   # f1[is.na(f1)] <- paste0(nm,'.na')
+   f1[is.na(f1)] <- '.na'
    as.factor(f1)
 }
 
