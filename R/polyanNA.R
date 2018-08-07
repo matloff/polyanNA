@@ -6,50 +6,58 @@
 # the goal is to have polyanNA() run on both the training data and new
 # data; some of the arguments have different meanings in the two cases
 
+# typical usage: apply polyanNA() to training data; then run rm() or
+# whatever; then run polyanNA() on the new data and feed the result into
+# predict.pa1()
+
 # arguments:
 
 #    xy: input data, X and Y in training case, only X in new data case
 #    yCol: column number of Y, training case
 #    dtz: discretize the numeric variables
-#    breaks:
+#    breaks: if dtz, number of desired levels in the discretized vector
+#       (not counting 'na')
+#    ranges: in the new-data case, 2 x nX matrix, where nX is the number
+#       of X variables; i-th column contains min, max for Xi; picked up
+#       from output of polyanNA() on the training data
 
-# the input data frame xy has Y in column yCol; we'll use x to refer to
-# xy without that column
+# we'll use x here to refer to xy without the Y column, if any
 
-# for each column in x that is a factor and has at least one NA value,
-# add an 'na' level and recode the NA values to that level; then fit the
-# regression model; that way, one can account for the potential
-# predictive information that an NA value may convey
+# if dtz , then the numeric columns are run through
+# 'discretize', converted to factors 
 
-# if dtz option, then the numeric columns are run through
-# 'discretize' 
+# then for each column in x that is a factor and has at least one NA
+# value, add an 'na' level and recode the NA values to that level; that
+# way, one can account for the potential predictive information that an
+# NA value may convey
 
-# the latter case is specified via yCol = NULL, and then the
-# 'ranges' argument must be non-NULL; it will be a list, with first
-# component being the 
-
-# the argument 'ranges', if non-NULL, 
-
-# to account for multiple interactions, run the result through polyreg
+# to account for multiple interactions between Ns etc., run the result
+# through polyreg
 
 polyanNA <- function(xy,yCol,dtz=FALSE,breaks=5,ranges=NULL) 
 {
-   x <- xy[,-yCol]
-   for (i in 1:ncol(x)) {
-      if (is.numeric(x[,i]) && dtz)  
-         x[,i] <- discretize(x[,i],nLevels=breaks)
+   if (!is.null(yCol)) x <- xy[,-yCol] else x <- xy
+   if (dtz) {
+      for (i in 1:ncol(x)) {
+         if (is.numeric(x[,i]))  
+            x[,i] <- discretize(x[,i],nLevels=breaks)
+      }
    }
+   # which columns have NAs?
    naByCol <- apply(x,2,function(col) any(is.na(col)))
    for (i in 1:ncol(x)) {
       if (naByCol[i]) {  # any NAs in this col?
          if (is.factor(x[,i])) x[,i] <- addNAlvl(x[,i]) 
       }
    }
-   xy[,-yCol] <- x
+   if (!is.null(yCol)) xy[,-yCol] <- x else xy <- x
    xy
 }
 
 #########################  addNAlvl  ##################################
+
+# if factor f has any NAs, add a new level to the factor, 'na', and
+# replace any NAs by this level
 
 addNAlvl <- function(f) 
 {
@@ -90,7 +98,7 @@ discretize <- function(x,nLevels) {
 #  4  <NA>    B
 #  5   yes    B
 #  6 maybe <NA>
-#  > dNoNA <- polyanNA(d)
+#  > dNoNA <- polyanNA(d,NULL)
 #  > dNoNA
 #       ans    clr
 #  1    yes clr.na
