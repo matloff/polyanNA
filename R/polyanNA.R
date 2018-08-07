@@ -1,7 +1,17 @@
 
-#########################  polyanNA  ####################################
+#########################  polyanNA  ##################################
 
 # assumption-free missing value method, for a prediction context
+
+# the goal is to have polyanNA() run on both the training data and new
+# data; some of the arguments have different meanings in the two cases
+
+# arguments:
+
+#    xy: input data, X and Y in training case, only X in new data case
+#    yCol: column number of Y, training case
+#    dtz: discretize the numeric variables
+#    breaks:
 
 # the input data frame xy has Y in column yCol; we'll use x to refer to
 # xy without that column
@@ -14,9 +24,15 @@
 # if dtz option, then the numeric columns are run through
 # 'discretize' 
 
+# the latter case is specified via yCol = NULL, and then the
+# 'ranges' argument must be non-NULL; it will be a list, with first
+# component being the 
+
+# the argument 'ranges', if non-NULL, 
+
 # to account for multiple interactions, run the result through polyreg
 
-polyanNA <- function(xy,yCol,dtz=FALSE,breaks=5) 
+polyanNA <- function(xy,yCol,dtz=FALSE,breaks=5,ranges=NULL) 
 {
    x <- xy[,-yCol]
    for (i in 1:ncol(x)) {
@@ -26,24 +42,24 @@ polyanNA <- function(xy,yCol,dtz=FALSE,breaks=5)
    naByCol <- apply(x,2,function(col) any(is.na(col)))
    for (i in 1:ncol(x)) {
       if (naByCol[i]) {  # any NAs in this col?
-         if (is.factor(x[,i])) {
-            nm <- names(x)[i]
-            x[,i] <- addNAlvl(x[,i],nm) 
-         }
+         if (is.factor(x[,i])) x[,i] <- addNAlvl(x[,i]) 
       }
    }
    xy[,-yCol] <- x
    xy
 }
 
-# 
-addNAlvl <- function(f,nm) 
+#########################  addNAlvl  ##################################
+
+addNAlvl <- function(f) 
 {
    f1 <- as.character(f)
    # f1[is.na(f1)] <- paste0(nm,'.na')
    f1[is.na(f1)] <- '.na'
    as.factor(f1)
 }
+
+########################  discretize  ##################################
 
 # converts a numeric variable x to a factor with nLevels levels; divides
 # range(x) into equal-width intervals, closed on the right, open on the
