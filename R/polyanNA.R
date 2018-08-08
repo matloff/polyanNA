@@ -71,10 +71,10 @@ addNAlvl <- function(f)
 
 # converts a numeric variable x to a factor with nLevels levels; divides
 # range(x) into equal-width intervals, closed on the right, open on the
-# left; the names of the levels are the right endpoints of the
+# left, using cut(); the names of the levels are the right endpoints of the
 # intervals, including the last, which is named 'Inf'
 
-discretize <- function(x,nLevels) {
+discretize <- function(x,nLevels=NULL,lvls=NULL) {
    xc <- cut(x,nLevels)
    lxc <- levels(xc)
    commaPts <- regexpr(',',lxc)
