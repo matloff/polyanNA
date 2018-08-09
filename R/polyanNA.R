@@ -75,15 +75,23 @@ addNAlvl <- function(f)
 # intervals, including the last, which is named 'Inf'
 
 discretize <- function(x,nLevels=NULL,lvls=NULL) {
-   xc <- cut(x,nLevels)
-   lxc <- levels(xc)
-   commaPts <- regexpr(',',lxc)
-   bracketPts <- nchar(lxc)
-   for (i in 1:(length(lxc)-1) ) 
-      levels(xc)[i] <- 
-         substr(lxc[i],commaPts[i]+1,bracketPts[i]-1)
-   levels(xc)[length(lxc)] <- 'Inf'
-   xc
+#    xc <- cut(x,nLevels)
+#    lxc <- levels(xc)
+#    commaPts <- regexpr(',',lxc)
+#    bracketPts <- nchar(lxc)
+#    for (i in 1:(length(lxc)-1) ) 
+#       levels(xc)[i] <- 
+#          substr(lxc[i],commaPts[i]+1,bracketPts[i]-1)
+#    levels(xc)[length(lxc)] <- 'Inf'
+#    xc
+   if (!is.factor(x)) {  # x is training data, not new x
+      rng <- range(x); xmn <- rng[1]; xmx <- rng[2]
+      increm <- (xmx - xmn) / nLevels
+      numericLvls <- seq(xmn,xmx,increm)
+      lvls <- as.character(numericLvls)
+   } else  # x is newx
+      numericLvls <- as.numeric(lvls)
+   xOut <- 
 }
 
 # example
