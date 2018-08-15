@@ -42,7 +42,7 @@ polyanNA <- function(xy,yCol,dtz=FALSE,breaks=5,ranges=NULL)
    if (dtz) {
       for (i in 1:ncol(x)) {
          if (is.numeric(x[,i]))  
-            x[,i] <- discretize(x[,i],nLevels=breaks,newx)
+            x[,i] <- discretize(x[,i],nLevels=breaks)
       }
    }
    # which columns have NAs?
@@ -72,11 +72,21 @@ addNAlvl <- function(f)
 ########################  discretize  ##################################
 
 # converts a numeric variable x to a factor with nLevels levels; divides
-# range(x) into equal-width intervals, closed on the right, open on the
-# left, using cut(); the names of the levels are the right endpoints of the
-# intervals, including the last, which is named 'Inf'
+# range(x) into nLevels equal-width intervals, and codes accordingly; if
+# new X for prediciton, then use the pre-existing levels information,
+# encoded as an attribute,
 
-discretize <- function(x,nLevels=NULL,lvls=NULL,newx=FALSE) {
+# arguments:
+
+# x: a numeric vector
+# nLevels: if x is in training set, the number of desired intervals;
+#          NULL if new X
+# codeInfo:  information on subintervls; NULL if training set; for new
+#            obtain from training set
+
+# value: a factor, coded accordingly the the intervals
+
+discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
 #    xc <- cut(x,nLevels)
 #    lxc <- levels(xc)
 #    commaPts <- regexpr(',',lxc)
@@ -86,27 +96,33 @@ discretize <- function(x,nLevels=NULL,lvls=NULL,newx=FALSE) {
 #          substr(lxc[i],commaPts[i]+1,bracketPts[i]-1)
 #    levels(xc)[length(lxc)] <- 'Inf'
 #    xc
+   newx <- is.null(nLevels)
    if (!newx) {  # x is training data, not new x
-      rng <- range(x); xmn <- rng[1]; xmx <- rng[2]
+      rng <- range(x,na.rm=T); xmn <- rng[1]; xmx <- rng[2]
       increm <- (xmx - xmn) / nLevels
       xDisc <- round((x - xmn) / increm)
-      codeMin <- min(xDisc)
-      codeMax <- max(xDisc)
-      codeInfo <- list(xmn=xmn,increm=increm,codeMin=codeMin,codeMax=codeMax)
+      xdu <- unique(xDisc)
+      xdu <- xdu[!is.na(xdu)]
+      codeMin <- min(xdu)
+      codeMax <- max(xdu)
+      codeInfo <- 
+         list(xmn=xmn,increm=increm,codeMin=codeMin,codeMax=codeMax)
+      xDisc <- as.factor(xDisc)
       attr(xDisc,'codeInfo') <- codeInfo
    } else {
-      codeInfo <- attr(x,'codeInfo')
+      # codeInfo <- attr(x,'codeInfo')
       xmn <- codeInfo$xmn
       increm <- codeInfo$increm
       codeMin <- codeInfo$codeMin
       codeMax <- codeInfo$codeMax
+      x <- as.numeric(x)
       xDisc <- round((x - xmn) / increm)
-      xDisc <- pmax(xDisc,codeMin)
-      xDisc <- pmin(xDisc,codeMax)
+      xDisc <- pmax(xDisc,codeMin,na.rm=T)
+      xDisc <- pmin(xDisc,codeMax,na.rm=T)
       xDisc <- as.character(xDisc)
       xDisc <- as.factor(xDisc)
    }
-   xDisc 
+   xDisc
 }
 
 # example
