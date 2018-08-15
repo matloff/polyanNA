@@ -36,11 +36,13 @@
 
 polyanNA <- function(xy,yCol,dtz=FALSE,breaks=5,ranges=NULL) 
 {
-   if (!is.null(yCol)) x <- xy[,-yCol] else x <- xy
+
+   newx <- is.null(yCol)
+   if (newx) x <- xy[,-yCol] else x <- xy
    if (dtz) {
       for (i in 1:ncol(x)) {
          if (is.numeric(x[,i]))  
-            x[,i] <- discretize(x[,i],nLevels=breaks)
+            x[,i] <- discretize(x[,i],nLevels=breaks,newx)
       }
    }
    # which columns have NAs?
@@ -74,7 +76,7 @@ addNAlvl <- function(f)
 # left, using cut(); the names of the levels are the right endpoints of the
 # intervals, including the last, which is named 'Inf'
 
-discretize <- function(x,nLevels=NULL,lvls=NULL) {
+discretize <- function(x,nLevels=NULL,lvls=NULL,newx=FALSE) {
 #    xc <- cut(x,nLevels)
 #    lxc <- levels(xc)
 #    commaPts <- regexpr(',',lxc)
@@ -84,14 +86,27 @@ discretize <- function(x,nLevels=NULL,lvls=NULL) {
 #          substr(lxc[i],commaPts[i]+1,bracketPts[i]-1)
 #    levels(xc)[length(lxc)] <- 'Inf'
 #    xc
-   if (!is.factor(x)) {  # x is training data, not new x
+   if (!newx) {  # x is training data, not new x
       rng <- range(x); xmn <- rng[1]; xmx <- rng[2]
       increm <- (xmx - xmn) / nLevels
-      numericLvls <- seq(xmn,xmx,increm)
-      lvls <- as.character(numericLvls)
-   } else  # x is newx
-      numericLvls <- as.numeric(lvls)
-   xOut <- 
+      xDisc <- round((x - xmn) / increm)
+      codeMin <- min(xDisc)
+      codeMax <- max(xDisc)
+      codeInfo <- list(xmn=xmn,increm=increm,codeMin=codeMin,codeMax=codeMax)
+      attr(xDisc,'codeInfo') <- codeInfo
+   } else {
+      codeInfo <- attr(x,'codeInfo')
+      xmn <- codeInfo$xmn
+      increm <- codeInfo$increm
+      codeMin <- codeInfo$codeMin
+      codeMax <- codeInfo$codeMax
+      xDisc <- round((x - xmn) / increm)
+      xDisc <- pmax(xDisc,codeMin)
+      xDisc <- pmin(xDisc,codeMax)
+      xDisc <- as.character(xDisc)
+      xDisc <- as.factor(xDisc)
+   }
+   xDisc 
 }
 
 # example
