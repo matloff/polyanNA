@@ -122,6 +122,7 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
       xDisc <- as.character(xDisc)
       xDisc <- as.factor(xDisc)
    }
+   class(xDisc) <- c('nasAdded','data frame')
    xDisc
 }
 
@@ -146,6 +147,23 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
 #  4 ans.na      B
 #  5    yes      B
 #  6  maybe clr.na
+
+##########################    lm.pa()    ###################################
+
+# does usual lm() but on data with 'na' values
+
+lm.pa <- function(xy,maxDeg=2,maxInteractDeg=2) {
+   # some columns may not have been "de-NAed", so need to use only
+   # complete cases
+   xy <- xy[complete.cases(xy),]
+   frml <- names(xy)[ncol(xy)]
+   frml <- paste0(frml,' ~ .')
+   frml <- as.formula(frml)
+   lmout <- lm(frml,data=xy)
+}
+
+
+
 
 ### ###########################  lm.marg  ####################################
 ### 
