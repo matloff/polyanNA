@@ -34,7 +34,7 @@
 # to account for multiple interactions between Ns etc., run the result
 # through polyreg
 
-polyanNA <- function(xy,yCol,dtz=FALSE,breaks=5,ranges=NULL) 
+polyanNA <- function(xy,yCol=NULL,dtz=FALSE,breaks=5,allCodeInfo=NULL) 
 {
 
    newx <- is.null(yCol)
