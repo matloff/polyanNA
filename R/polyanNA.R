@@ -87,15 +87,6 @@ addNAlvl <- function(f)
 # value: a factor, coded accordingly the the intervals
 
 discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
-#    xc <- cut(x,nLevels)
-#    lxc <- levels(xc)
-#    commaPts <- regexpr(',',lxc)
-#    bracketPts <- nchar(lxc)
-#    for (i in 1:(length(lxc)-1) ) 
-#       levels(xc)[i] <- 
-#          substr(lxc[i],commaPts[i]+1,bracketPts[i]-1)
-#    levels(xc)[length(lxc)] <- 'Inf'
-#    xc
    newx <- is.null(nLevels)
    if (!newx) {  # x is training data, not new x
       rng <- range(x,na.rm=T); xmn <- rng[1]; xmx <- rng[2]
@@ -148,7 +139,7 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
 #  5    yes      B
 #  6  maybe clr.na
 
-##########################    lm.pa()    ###################################
+####################    lm.pa(), predict.lm.pa()    #########################
 
 # does usual lm() but on data with 'na' values
 
@@ -160,9 +151,17 @@ lm.pa <- function(xy,maxDeg=2,maxInteractDeg=2) {
    frml <- paste0(frml,' ~ .')
    frml <- as.formula(frml)
    lmout <- lm(frml,data=xy)
+   class(lmout) <- 'lm.pa')
 }
 
+# predicts Ys for newx from lmpa, an object of class 'lm.pa' from lm.pa()
 
+predict.lm.pa <- function(lmpa,newx) {
+   # convert newx
+   oldx <- lmpa$model$x
+   newx <- polyanNA(newx
+
+}
 
 
 ### ###########################  lm.marg  ####################################
