@@ -17,7 +17,7 @@
 #    yCol: column number of Y, training case
 #    dtz: discretize the numeric variables
 #    breaks: if dtz, number of desired levels in the discretized vector
-#       (not counting 'na')
+#       (not counting 'na'); otherwise NULL
 #    allCodeInfo: in the new-data case, an R list, one element for each
 #       column of X; the element is NULL unless that column had been
 #       discretized in the original, in which it is the codeInfo
@@ -25,7 +25,7 @@
 
 # we'll use x here to refer to xy without the Y column, if any
 
-# if dtz , then the numeric columns are run through # 'discretize', 
+# if dtz, then the numeric columns are run through # 'discretize', 
 # and converted to factors 
 
 # then for each column in x that is a factor and has at least one NA
@@ -36,15 +36,20 @@
 # to account for multiple interactions between NAs etc., run the result
 # through polyreg
 
-polyanNA <- function(xy,yCol=NULL,dtz=FALSE,breaks=5,allCodeInfo=NULL) 
+polyanNA <- function(xy,yCol=NULL,dtz=FALSE,breaks=NULL,allCodeInfo=NULL) 
 {
 
    newdata <- is.null(yCol)
-   if (newdata) x <- xy[,-yCol] else x <- xy
+   x <- if (newdata) xy[,-yCol] else xy
    if (dtz) {
       for (i in 1:ncol(x)) {
-         if (is.numeric(x[,i]))  
-            x[,i] <- discretize(x[,i],nLevels=breaks)
+         if (is.numeric(x[,i])) {
+            # discretize and make it a factor
+            x[,i] <- discretize(x[,i],nLevels=breaks,
+               codeInfo=allCodeInfo[[i]])
+         } else {
+            attr(x[,i],codeInfo) <- 'no code info'
+         }
       }
    }
    # which columns have NAs?
@@ -54,7 +59,8 @@ polyanNA <- function(xy,yCol=NULL,dtz=FALSE,breaks=5,allCodeInfo=NULL)
          if (is.factor(x[,i])) x[,i] <- addNAlvl(x[,i]) 
       }
    }
-   if (!is.null(yCol)) xy[,-yCol] <- x else xy <- x
+   if (!newdata) xy[,-yCol] <- x else xy <- x
+   class(xy) <- 'pa'
    xy
 }
 
@@ -84,25 +90,30 @@ addNAlvl <- function(f)
 # nLevels: if x is in training set, the number of desired intervals;
 #          NULL if new X
 # codeInfo:  information on subintervls; NULL if training set; for new
-#            obtain from training set
+#            obtain from training set, produced by original call to
+#            discretize() on this column
 
 # value: a factor, coded accordingly the the intervals
 
 discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
    newdata <- is.null(nLevels)
    if (!newdata) {  # x is training data, not new x
+      # intervals based on dividing range of x into equal-width subintervls
       rng <- range(x,na.rm=T); xmn <- rng[1]; xmx <- rng[2]
       increm <- (xmx - xmn) / nLevels
-      xDisc <- round((x - xmn) / increm)
+      xDisc <- round((x - xmn) / increm)  # discretized x
+      # later, when do prediction, will need to know the range of codes
+      # in xDisc
       xdu <- unique(xDisc)
       xdu <- xdu[!is.na(xdu)]
       codeMin <- min(xdu)
       codeMax <- max(xdu)
+      # record so can discretize future x, cosistently with this one
       codeInfo <- 
          list(xmn=xmn,increm=increm,codeMin=codeMin,codeMax=codeMax)
       xDisc <- as.factor(xDisc)
       attr(xDisc,'codeInfo') <- codeInfo
-   } else {
+   } else {  # new data case
       # codeInfo <- attr(x,'codeInfo')
       xmn <- codeInfo$xmn
       increm <- codeInfo$increm
