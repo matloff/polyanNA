@@ -6,39 +6,41 @@
 # the goal is to have polyanNA() run on both the training data and new
 # data; some of the arguments have different meanings in the two cases
 
-# typical usage: apply polyanNA() to training data; then run rm() or
+# typical usage: apply polyanNA() to training data; then run lm() or
 # whatever; then run polyanNA() on the new data and feed the result into
 # predict.pa1()
 
 # arguments:
 
-#    xy: input data, X and Y in training case, only X in new data case
+#    xy: input data, X and Y in training case, only X in new-data 
+#        (prediction) case
 #    yCol: column number of Y, training case
 #    dtz: discretize the numeric variables
 #    breaks: if dtz, number of desired levels in the discretized vector
 #       (not counting 'na')
-#    ranges: in the new-data case, 2 x nX matrix, where nX is the number
-#       of X variables; i-th column contains min, max for Xi; picked up
-#       from output of polyanNA() on the training data
+#    allCodeInfo: in the new-data case, an R list, one element for each
+#       column of X; the element is NULL unless that column had been
+#       discretized in the original, in which it is the codeInfo
+#       attribute from that operation 
 
 # we'll use x here to refer to xy without the Y column, if any
 
-# if dtz , then the numeric columns are run through
-# 'discretize', converted to factors 
+# if dtz , then the numeric columns are run through # 'discretize', 
+# and converted to factors 
 
 # then for each column in x that is a factor and has at least one NA
 # value, add an 'na' level and recode the NA values to that level; that
 # way, one can account for the potential predictive information that an
 # NA value may convey
 
-# to account for multiple interactions between Ns etc., run the result
+# to account for multiple interactions between NAs etc., run the result
 # through polyreg
 
 polyanNA <- function(xy,yCol=NULL,dtz=FALSE,breaks=5,allCodeInfo=NULL) 
 {
 
-   newx <- is.null(yCol)
-   if (newx) x <- xy[,-yCol] else x <- xy
+   newdata <- is.null(yCol)
+   if (newdata) x <- xy[,-yCol] else x <- xy
    if (dtz) {
       for (i in 1:ncol(x)) {
          if (is.numeric(x[,i]))  
@@ -87,8 +89,8 @@ addNAlvl <- function(f)
 # value: a factor, coded accordingly the the intervals
 
 discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
-   newx <- is.null(nLevels)
-   if (!newx) {  # x is training data, not new x
+   newdata <- is.null(nLevels)
+   if (!newdata) {  # x is training data, not new x
       rng <- range(x,na.rm=T); xmn <- rng[1]; xmx <- rng[2]
       increm <- (xmx - xmn) / nLevels
       xDisc <- round((x - xmn) / increm)
@@ -154,7 +156,7 @@ lm.pa <- function(xy,maxDeg=2,maxInteractDeg=2) {
    class(lmout) <- 'lm.pa')
 }
 
-# predicts Ys for newx from lmpa, an object of class 'lm.pa' from lm.pa()
+# predicts Ys for newdata from lmpa, an object of class 'lm.pa' from lm.pa()
 
 predict.lm.pa <- function(lmpa,newx) {
    # convert newx
