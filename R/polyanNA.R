@@ -15,9 +15,8 @@
 #    xy: input data, X and Y in training case, only X in new-data 
 #        (prediction) case
 #    yCol: column number of Y, training case
-#    dtz: discretize the numeric variables
-#    breaks: if dtz, number of desired levels in the discretized vector
-#       (not counting 'na'); otherwise NULL
+#    breaks: if non-NULL, number of desired levels in the discretized 
+#       vector (not counting 'na')
 #    allCodeInfo: in the new-data case, an R list, one element for each
 #       column of X; the element is NULL unless that column had been
 #       discretized in the original, in which it is the codeInfo
@@ -25,8 +24,8 @@
 
 # we'll use x here to refer to xy without the Y column, if any
 
-# if dtz, then the numeric columns are run through # 'discretize', 
-# and converted to factors 
+# if breaks is non_NULL, then the numeric columns are run through #
+# 'discretize', and converted to factors 
 
 # then for each column in x that is a factor and has at least one NA
 # value, add an 'na' level and recode the NA values to that level; that
@@ -36,19 +35,21 @@
 # to account for multiple interactions between NAs etc., run the result
 # through polyreg
 
-polyanNA <- function(xy,yCol=NULL,dtz=FALSE,breaks=NULL,allCodeInfo=NULL) 
+polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL) 
 {
-
+browser()
    newdata <- is.null(yCol)
-   x <- if (newdata) xy[,-yCol] else xy
+   x <- if (newdata) xy else xy[,-yCol] 
+   dtz <- !is.null(breaks)
    if (dtz) {
       for (i in 1:ncol(x)) {
          if (is.numeric(x[,i])) {
             # discretize and make it a factor
-            x[,i] <- discretize(x[,i],nLevels=breaks,
-               codeInfo=allCodeInfo[[i]])
+            codeInfo <- 
+               if (newdata) allCodeInfo[[i]] else NULL
+            x[,i] <- discretize(x[,i],nLevels=breaks,codeInfo)
          } else {
-            attr(x[,i],codeInfo) <- 'no code info'
+            attr(x[,i],'codeInfo') <- 'no code info'
          }
       }
    }
@@ -56,7 +57,8 @@ polyanNA <- function(xy,yCol=NULL,dtz=FALSE,breaks=NULL,allCodeInfo=NULL)
    naByCol <- apply(x,2,function(col) any(is.na(col)))
    for (i in 1:ncol(x)) {
       if (naByCol[i]) {  # any NAs in this col?
-         if (is.factor(x[,i])) x[,i] <- addNAlvl(x[,i]) 
+         nm <- names(x)[i]
+         if (is.factor(x[,i])) x[,i] <- addNAlvl(x[,i],nm) 
       }
    }
    if (!newdata) xy[,-yCol] <- x else xy <- x
@@ -69,11 +71,11 @@ polyanNA <- function(xy,yCol=NULL,dtz=FALSE,breaks=NULL,allCodeInfo=NULL)
 # if factor f has any NAs, add a new level to the factor, 'na', and
 # replace any NAs by this level
 
-addNAlvl <- function(f) 
+addNAlvl <- function(f,nm)
 {
    f1 <- as.character(f)
    # f1[is.na(f1)] <- paste0(nm,'.na')
-   f1[is.na(f1)] <- '.na'
+   f1[is.na(f1)] <- paste0(nm,'.na')
    as.factor(f1)
 }
 
@@ -114,43 +116,33 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
       xDisc <- as.factor(xDisc)
       attr(xDisc,'codeInfo') <- codeInfo
    } else {  # new data case
-      # codeInfo <- attr(x,'codeInfo')
       xmn <- codeInfo$xmn
       increm <- codeInfo$increm
       codeMin <- codeInfo$codeMin
       codeMax <- codeInfo$codeMax
-      x <- as.numeric(x)
+      # x <- as.numeric(x)
       xDisc <- round((x - xmn) / increm)
       xDisc <- pmax(xDisc,codeMin,na.rm=T)
       xDisc <- pmin(xDisc,codeMax,na.rm=T)
       xDisc <- as.character(xDisc)
       xDisc <- as.factor(xDisc)
    }
-   class(xDisc) <- c('nasAdded','data frame')
+   # class(xDisc) <- c('nasAdded','data frame')
    xDisc
 }
 
-# example
-
-#  > d <- data.frame(ans=factor(c('yes','no','maybe',NA,'yes','maybe')))
-#  > d$clr <- factor(c(NA,'R','G','B','B',NA))
-#  > d
-#      ans  clr
-#  1   yes <NA>
-#  2    no    R
-#  3 maybe    G
-#  4  <NA>    B
-#  5   yes    B
-#  6 maybe <NA>
-#  > dNoNA <- polyanNA(d,NULL)
-#  > dNoNA
-#       ans    clr
-#  1    yes clr.na
-#  2     no      R
-#  3  maybe      G
-#  4 ans.na      B
-#  5    yes      B
-#  6  maybe clr.na
+test <- function() 
+{
+browser()
+   ans <- factor(c('yes','no','maybe',NA,'yes','maybe'))
+   ht <- c(62,NA,68,72,68,71)
+   clr <- factor(c('R','R','G','B','B','B'))
+   y <- runif(6)
+   d <- data.frame(ans,ht,clr,y)
+   print(d)
+   dNoNA <- polyanNA(d,yCol=4,breaks=2)
+   print(dNoNA)
+}
 
 ####################    lm.pa(), predict.lm.pa()    #########################
 
@@ -164,7 +156,7 @@ lm.pa <- function(xy,maxDeg=2,maxInteractDeg=2) {
    frml <- paste0(frml,' ~ .')
    frml <- as.formula(frml)
    lmout <- lm(frml,data=xy)
-   class(lmout) <- 'lm.pa')
+   class(lmout) <- 'lm.pa'
 }
 
 # predicts Ys for newdata from lmpa, an object of class 'lm.pa' from lm.pa()
@@ -172,8 +164,7 @@ lm.pa <- function(xy,maxDeg=2,maxInteractDeg=2) {
 predict.lm.pa <- function(lmpa,newx) {
    # convert newx
    oldx <- lmpa$model$x
-   newx <- polyanNA(newx
-
+   newx <- polyanNA(newx)
 }
 
 
