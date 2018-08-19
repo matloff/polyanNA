@@ -39,7 +39,6 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
 {
    newdata <- is.null(yCol)
    x <- if (newdata) xy else xy[,-yCol,drop=FALSE] 
-   # R attributes do NOT get copied upon assignment, so need this
    allCodeInfo <- list(length = ncol(x))
    if (!newdata) {
       for (i in 1:ncol(x)) 
@@ -155,6 +154,13 @@ getAllCodeInfo <- function(xDtFrm)
       tmp[[i]] <- attr(xDtFrm[,i],'codeInfo')
    }
 }
+
+********************     cpWithAttrr      * *********************************
+
+# R attributes do NOT get copied upon assignment, so need this
+
+require(gtools)
+cpWithAttr <- defmacro(x,y,xattr,expr={y <- x; attr(y,xattr) <- attr(x,xattr)})
 
 ####################    lm.pa(), predict.lm.pa()    #########################
 
