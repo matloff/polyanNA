@@ -37,9 +37,14 @@
 
 polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL) 
 {
-browser()
    newdata <- is.null(yCol)
-   x <- if (newdata) xy else xy[,-yCol] 
+   x <- if (newdata) xy else xy[,-yCol,drop=FALSE] 
+   # R attributes do NOT get copied upon assignment, so need this
+   allCodeInfo <- list(length = ncol(x))
+   if (!newdata) {
+      for (i in 1:ncol(x)) 
+         allCodeInfo[[i]] <- 'no code info'
+   }
    dtz <- !is.null(breaks)
    if (dtz) {
       for (i in 1:ncol(x)) {
@@ -48,13 +53,12 @@ browser()
             codeInfo <- 
                if (newdata) allCodeInfo[[i]] else NULL
             x[,i] <- discretize(x[,i],nLevels=breaks,codeInfo)
-         } else {
-            attr(x[,i],'codeInfo') <- 'no code info'
          }
       }
    }
    # which columns have NAs?
    naByCol <- apply(x,2,function(col) any(is.na(col)))
+browser()
    for (i in 1:ncol(x)) {
       if (naByCol[i]) {  # any NAs in this col?
          nm <- names(x)[i]
@@ -62,7 +66,7 @@ browser()
       }
    }
    if (!newdata) xy[,-yCol] <- x else xy <- x
-   class(xy) <- 'pa'
+   class(xy) <- c('pa','data.frame')
    xy
 }
 
@@ -133,15 +137,23 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
 
 test <- function() 
 {
-browser()
    ans <- factor(c('yes','no','maybe',NA,'yes','maybe'))
    ht <- c(62,NA,68,72,68,71)
    clr <- factor(c('R','R','G','B','B','B'))
    y <- runif(6)
    d <- data.frame(ans,ht,clr,y)
-   print(d)
-   dNoNA <- polyanNA(d,yCol=4,breaks=2)
-   print(dNoNA)
+   d1 <- polyanNA(d,yCol=4,breaks=2)
+   browser()
+   newx <- data.frame(ans='no',ht=70,clr='G')
+   polyanNA(d1,getAllCodeInfo(d1[,-4]))
+}
+
+getAllCodeInfo <- function(xDtFrm) 
+{
+   tmp <- list(length=ncol(xDtFrm))
+   for (i in 1:length(tmp)) {
+      tmp[[i]] <- attr(xDtFrm[,i],'codeInfo')
+   }
 }
 
 ####################    lm.pa(), predict.lm.pa()    #########################
