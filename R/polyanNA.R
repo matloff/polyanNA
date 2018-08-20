@@ -39,8 +39,11 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
 {
    newdata <- is.null(yCol)
    x <- if (newdata) xy else xy[,-yCol,drop=FALSE] 
-   allCodeInfo <- list(length = ncol(x))
-   if (!newdata) {
+   if (newdata) {
+      # assert proper inputs
+      stopifnot(is.null(breaks) && !is.null(allCodeInfo))
+   } else # training case
+      allCodeInfo <- list(length = ncol(x))
       for (i in 1:ncol(x)) 
          allCodeInfo[[i]] <- 'no code info'
    }
@@ -51,13 +54,14 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
             # discretize and make it a factor
             codeInfo <- 
                if (newdata) allCodeInfo[[i]] else NULL
-            x[,i] <- discretize(x[,i],nLevels=breaks,codeInfo)
+            tmp <- discretize(x[,i],nLevels=breaks,codeInfo)
+            x[,i] <- tmp$xDisc
+            allCodeInfo[[i]] <- tmp$codeInfo
          }
       }
    }
    # which columns have NAs?
    naByCol <- apply(x,2,function(col) any(is.na(col)))
-browser()
    for (i in 1:ncol(x)) {
       if (naByCol[i]) {  # any NAs in this col?
          nm <- names(x)[i]
@@ -66,7 +70,7 @@ browser()
    }
    if (!newdata) xy[,-yCol] <- x else xy <- x
    class(xy) <- c('pa','data.frame')
-   xy
+   list(xy=xy, allCodeInfo=allCodeInfo)
 }
 
 #########################  addNAlvl  ##################################
@@ -98,7 +102,9 @@ addNAlvl <- function(f,nm)
 #            obtain from training set, produced by original call to
 #            discretize() on this column
 
-# value: a factor, coded accordingly the the intervals
+# value: an R list: xDisc, a factor, coded accordingly the the
+#        intervals, and codeInfo (training case), the information on the
+#        discretization
 
 discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
    newdata <- is.null(nLevels)
@@ -117,7 +123,6 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
       codeInfo <- 
          list(xmn=xmn,increm=increm,codeMin=codeMin,codeMax=codeMax)
       xDisc <- as.factor(xDisc)
-      attr(xDisc,'codeInfo') <- codeInfo
    } else {  # new data case
       xmn <- codeInfo$xmn
       increm <- codeInfo$increm
@@ -130,8 +135,7 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
       xDisc <- as.character(xDisc)
       xDisc <- as.factor(xDisc)
    }
-   # class(xDisc) <- c('nasAdded','data frame')
-   xDisc
+   list(xDisc=xDisc,codeInfo=codeInfo)
 }
 
 test <- function() 
