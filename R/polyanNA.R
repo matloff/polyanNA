@@ -47,10 +47,12 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
       for (i in 1:ncol(x)) 
          allCodeInfo[[i]] <- 'no code info'
    }
-   dtz <- !is.null(breaks)
-   if (dtz) {
+   # any columns need to be discretized?
+   needDisc <- !is.null(breaks) || any(allCodeInfo != 'no code info')
+   if (needDisc) {
       for (i in 1:ncol(x)) {
-         if (is.numeric(x[,i])) {
+         if (!newdata && is.numeric(x[,i]) || 
+                allCodeInfo[[i]] != 'no code info') {
             # discretize and make it a factor
             codeInfo <- 
                if (newdata) allCodeInfo[[i]] else NULL
@@ -60,7 +62,7 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
          }
       }
    }
-   # which columns have NAs?
+   # which columns have NAs and need to be converted?
    naByCol <- apply(x,2,function(col) any(is.na(col)))
    for (i in 1:ncol(x)) {
       if (naByCol[i]) {  # any NAs in this col?
