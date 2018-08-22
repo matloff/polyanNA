@@ -37,7 +37,6 @@
 
 polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL) 
 {
-if (is.null(yCol)) browser()
    newdata <- is.null(yCol)
    x <- if (newdata) xy else xy[,-yCol,drop=FALSE] 
    if (newdata) {
@@ -57,7 +56,8 @@ if (is.null(yCol)) browser()
             # discretize and make it a factor
             codeInfo <- 
                if (newdata) allCodeInfo[[i]] else NULL
-            tmp <- discretize(x[,i],nLevels=breaks,codeInfo)
+            nLevels <- if (newdata) NULL else breaks
+            tmp <- discretize(x[,i],nLevels,codeInfo)
             x[,i] <- tmp$xDisc
             allCodeInfo[[i]] <- tmp$codeInfo
          }
@@ -122,19 +122,20 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
       xdu <- xdu[!is.na(xdu)]
       codeMin <- min(xdu)
       codeMax <- max(xdu)
-      # record so can discretize future x, cosistently with this one
+      # record so can discretize future x, consistently with this one
       codeInfo <- list(xmn=xmn,increm=increm,breaks=nLevels,
          codeMin=codeMin,codeMax=codeMax)
       xDisc <- as.factor(xDisc)
    } else {  # new data case
+browser()
       xmn <- codeInfo$xmn
       increm <- codeInfo$increm
+      nLevels <- codeInfo$nLevels
       codeMin <- codeInfo$codeMin
       codeMax <- codeInfo$codeMax
-      # x <- as.numeric(x)
       xDisc <- round((x - xmn) / increm)
-      xDisc <- pmax(xDisc,codeMin,na.rm=T)
-      xDisc <- pmin(xDisc,codeMax,na.rm=T)
+      xDisc <- pmax(xDisc,codeMin)
+      xDisc <- pmin(xDisc,codeMax)
       xDisc <- as.character(xDisc)
       xDisc <- as.factor(xDisc)
    }
@@ -143,13 +144,15 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
 
 test <- function() 
 {
+browser()
    ans <- factor(c('yes','no','maybe',NA,'yes','maybe'))
    ht <- c(62,NA,68,72,68,71)
    clr <- factor(c('R','R','G','B','B','B'))
    y <- runif(6)
    d <- data.frame(ans,ht,clr,y)
    d1 <- polyanNA(d,yCol=4,breaks=2)
-   newx <- data.frame(ans='no',ht=70,clr='G')
+   newx <- data.frame(ans=c('no',NA,'yes'),
+                      ht=c(NA,70,75),clr=c('G','G','R'))
    polyanNA(newx,allCodeInfo=d1$allCodeInfo)
 }
 
