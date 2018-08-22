@@ -39,7 +39,7 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
 {
 if (is.null(yCol)) browser()
    newdata <- is.null(yCol)
-   x <- if (newdata) xy$xy else xy[,-yCol,drop=FALSE] 
+   x <- if (newdata) xy else xy[,-yCol,drop=FALSE] 
    if (newdata) {
       # assert proper inputs
       stopifnot(is.null(breaks) && !is.null(allCodeInfo))
@@ -150,7 +150,7 @@ test <- function()
    d <- data.frame(ans,ht,clr,y)
    d1 <- polyanNA(d,yCol=4,breaks=2)
    newx <- data.frame(ans='no',ht=70,clr='G')
-   polyanNA(d1,allCodeInfo=d1$allCodeInfo)
+   polyanNA(newx,allCodeInfo=d1$allCodeInfo)
 }
 
 # ********************     cpWithAttrr    ##################################
