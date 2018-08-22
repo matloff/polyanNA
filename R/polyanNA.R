@@ -37,12 +37,13 @@
 
 polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL) 
 {
+if (is.null(yCol)) browser()
    newdata <- is.null(yCol)
-   x <- if (newdata) xy else xy[,-yCol,drop=FALSE] 
+   x <- if (newdata) xy$xy else xy[,-yCol,drop=FALSE] 
    if (newdata) {
       # assert proper inputs
       stopifnot(is.null(breaks) && !is.null(allCodeInfo))
-   } else # training case
+   } else { # training case
       allCodeInfo <- list(length = ncol(x))
       for (i in 1:ncol(x)) 
          allCodeInfo[[i]] <- 'no code info'
@@ -122,8 +123,8 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
       codeMin <- min(xdu)
       codeMax <- max(xdu)
       # record so can discretize future x, cosistently with this one
-      codeInfo <- 
-         list(xmn=xmn,increm=increm,codeMin=codeMin,codeMax=codeMax)
+      codeInfo <- list(xmn=xmn,increm=increm,breaks=nLevels,
+         codeMin=codeMin,codeMax=codeMax)
       xDisc <- as.factor(xDisc)
    } else {  # new data case
       xmn <- codeInfo$xmn
@@ -148,20 +149,11 @@ test <- function()
    y <- runif(6)
    d <- data.frame(ans,ht,clr,y)
    d1 <- polyanNA(d,yCol=4,breaks=2)
-   browser()
    newx <- data.frame(ans='no',ht=70,clr='G')
-   polyanNA(d1,getAllCodeInfo(d1[,-4]))
+   polyanNA(d1,allCodeInfo=d1$allCodeInfo)
 }
 
-getAllCodeInfo <- function(xDtFrm) 
-{
-   tmp <- list(length=ncol(xDtFrm))
-   for (i in 1:length(tmp)) {
-      tmp[[i]] <- attr(xDtFrm[,i],'codeInfo')
-   }
-}
-
-********************     cpWithAttrr      * *********************************
+# ********************     cpWithAttrr    ##################################
 
 # R attributes do NOT get copied upon assignment, so need this
 
