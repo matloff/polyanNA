@@ -72,8 +72,8 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
       }
    }
    if (!newdata) xy[,-yCol] <- x else xy <- x
-   class(xy) <- c('pa','data.frame')
-   list(xy=xy, allCodeInfo=allCodeInfo)
+   val <- list(xy=xy, allCodeInfo=allCodeInfo)
+   class(val) <- 'pa'
 }
 
 #########################  addNAlvl  ##################################
@@ -93,7 +93,7 @@ addNAlvl <- function(f,nm)
 
 # converts a numeric variable x to a factor with nLevels levels; divides
 # range(x) into nLevels equal-width intervals, and codes accordingly; if
-# new X for prediciton, then use the pre-existing levels information,
+# new X for prediction, then use the pre-existing levels information,
 # encoded as an attribute,
 
 # arguments:
@@ -127,7 +127,6 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
          codeMin=codeMin,codeMax=codeMax)
       xDisc <- as.factor(xDisc)
    } else {  # new data case
-browser()
       xmn <- codeInfo$xmn
       increm <- codeInfo$increm
       nLevels <- codeInfo$nLevels
@@ -167,15 +166,25 @@ cpWithAttr <- defmacro(x,y,xattr,expr={y <- x; attr(y,xattr) <- attr(x,xattr)})
 
 # does usual lm() but on data with 'na' values
 
-lm.pa <- function(xy,maxDeg=2,maxInteractDeg=2) {
+# arguments:
+
+paout: object of class'pa', output of polyanNA()
+
+maxDeg, maxInteractDeg: as in polyFit
+
+lm.pa <- function(paout,maxDeg=1,maxInteractDeg=1) {
    # some columns may not have been "de-NAed", so need to use only
    # complete cases
+   xy <- paout$xy
    xy <- xy[complete.cases(xy),]
    frml <- names(xy)[ncol(xy)]
    frml <- paste0(frml,' ~ .')
    frml <- as.formula(frml)
    lmout <- lm(frml,data=xy)
-   class(lmout) <- 'lm.pa'
+   val <- list(lmout=lmout,maxDeg=maxDeg,maxInteractDeg=maxInteractDeg,
+      allCodeInfo=paout$allCodeInfo)
+   class(val) <- 'lm.pa'
+   val
 }
 
 # predicts Ys for newdata from lmpa, an object of class 'lm.pa' from lm.pa()
