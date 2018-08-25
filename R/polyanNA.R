@@ -12,8 +12,8 @@
 
 # arguments:
 
-#    xy: input data, X and Y in training case, only X in new-data 
-#        (prediction) case
+#    xy: input data frame, X and Y in training case, only X in 
+#        new data (prediction) case
 #    yCol: column number of Y, training case
 #    breaks: if non-NULL, number of desired levels in the discretized 
 #       vector (not counting 'na')
@@ -74,6 +74,7 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
    if (!newdata) xy[,-yCol] <- x else xy <- x
    val <- list(xy=xy, allCodeInfo=allCodeInfo)
    class(val) <- 'pa'
+   val
 }
 
 #########################  addNAlvl  ##################################
@@ -143,7 +144,6 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
 
 test <- function() 
 {
-browser()
    ans <- factor(c('yes','no','maybe',NA,'yes','maybe'))
    ht <- c(62,NA,68,72,68,71)
    clr <- factor(c('R','R','G','B','B','B'))
@@ -153,6 +153,9 @@ browser()
    newx <- data.frame(ans=c('no',NA,'yes'),
                       ht=c(NA,70,75),clr=c('G','G','R'))
    polyanNA(newx,allCodeInfo=d1$allCodeInfo)
+browser()
+   d1lm <- lm.pa(d1)
+   predict(d1lm,newx)
 }
 
 # ********************     cpWithAttrr    ##################################
@@ -168,9 +171,8 @@ cpWithAttr <- defmacro(x,y,xattr,expr={y <- x; attr(y,xattr) <- attr(x,xattr)})
 
 # arguments:
 
-paout: object of class'pa', output of polyanNA()
-
-maxDeg, maxInteractDeg: as in polyFit
+#    paout: object of class'pa', output of polyanNA()
+#    maxDeg, maxInteractDeg: as in polyFit
 
 lm.pa <- function(paout,maxDeg=1,maxInteractDeg=1) {
    # some columns may not have been "de-NAed", so need to use only
@@ -181,6 +183,7 @@ lm.pa <- function(paout,maxDeg=1,maxInteractDeg=1) {
    frml <- paste0(frml,' ~ .')
    frml <- as.formula(frml)
    lmout <- lm(frml,data=xy)
+   # set up return value; note that allCodeInfo is needed for prediction
    val <- list(lmout=lmout,maxDeg=maxDeg,maxInteractDeg=maxInteractDeg,
       allCodeInfo=paout$allCodeInfo)
    class(val) <- 'lm.pa'
@@ -191,8 +194,8 @@ lm.pa <- function(paout,maxDeg=1,maxInteractDeg=1) {
 
 predict.lm.pa <- function(lmpa,newx) {
    # convert newx
-   oldx <- lmpa$model$x
-   newx <- polyanNA(newx)
+   newx <- polyanNA(newx,allCodeInfo=lmpa$allCodeInfo)
+   predict(lmpa$lmout,newx$xy)
 }
 
 
