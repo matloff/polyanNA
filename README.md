@@ -23,8 +23,11 @@ under development (see below), are **nonimputational**.
 
 ## Treating NA as a factor level
 
-Our first method builds on the Indicator Variable Method (IVM), which
-can be described as follows.
+Our first method is an extension of the Indicator Variable Method (IVM),
+to be used on numerical variables, say Age.  It can be described as
+follows.
+
+*IVM method*
 
 Say X includes some numeric variable, say Age. IVM add a new column
 to A, say Age.NA, consisting of 1s and 0s.  For any row in A for
@@ -33,18 +36,36 @@ otherwise Age.NA is 0.  So rather than trying to get the missing
 value, we treat the missingness as informative, with the information
 being carried in Age.NA.
 
-It is clear that the insertion of that 0 value can induce substantial
-bias, say in the regression coefficient of Age.  But the picture
-changes radically in the case of a categorical variable (R factor).  Say
-we have a variable EyeColor, taking on values Brown, Blue, Hazel and
-Green, thus an R factor with  these three levels.  Then instead of
-trying to impute the NAs, we add a new level, EyeColor.na to this
-factor.  This is quite different from simply replacing the value of a
-variable by 0 as above.
+It is clear that the insertion of that 0 value -- fake and likely highly
+inaccurate data -- can induce substantial bias, say in the regression
+coefficient of Age.  Indeed, some authors have dismissed IVM as only
+useful back in the era before modern, fast computers (Nur, 2010).  
+
+*Case of categorical variables*
+
+But if one extends IVM to categorical variables, i.e. R factors,  the
+picture changes radically. 
+
+Say we have a variable EyeColor, taking on values Brown, Blue, Hazel and
+Green, thus an R factor with these three levels.  Then instead of trying
+to impute the NAs, we add a new level, EyeColor.na to this factor.  We
+now proceed with our regression analysis as usual, using the modified
+Age variable.
 
 In a call to, say, R's lm() function, any R factor will be converted to
 dummy variables, k-1 of them for a k level factor.  Let's assume we do
 this explicitly, i.e. make this conversion before calling lm().
+
+*Bias issue, assumptions*
+
+This approach is then bias-free, in the sense that all the various
+conditional distributions involving missingness and our data variables
+is accounted for.  To be sure, one must keep in mind that, for instance,
+a regression coefficient for Brown must now be interpreted as the
+marginal effect on Y of "eye color known to be brown."  If one wants to
+remove that "known to be" qualifier, an assumption is needed (see below.)
+
+*Extension using a polynomial model*
 
 Now, note that if single NA values are informative, then pairs or
 triplets and so on may also carry information.  In other words, we 
