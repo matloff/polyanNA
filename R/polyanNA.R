@@ -198,6 +198,34 @@ predict.lm.pa <- function(lmpa,newx) {
    predict(lmpa$lmout,newx$xy)
 }
 
+#########################  lm.pa() example ###################################
+
+# illustration of use of polyanNA() and lm.pa() on the prgeng dataset
+# (in regtools package, included by polyanNA)
+
+lm.pa,ex <- function()
+{  getPE(Dummies=F)  # 2000 Census
+   pe1 <- pe[,c(1,3,5,7:9)]  # age educ occ sex wageinc wkswrkd
+   pe1$educ <- as.factor(pe1$educ)
+   pe1$occ <- as.factor(pe1$occ)
+   print(summary(lm(wageinc ~ .,data=pe1)))  # full data
+   # bhat for gender 8558.76, s.e. 708.75
+   pe2 <- pe1[,c(1,2,3,4,6,5)]
+   # simulate NAs, making high-wage Occ 2 more likely NA
+   occ <- pe2$occ
+   occ102 <- which(occ == '102')
+   forNA <- sample(occ102,2000)
+   occ[forNA] <- NA
+   pe102 <- pe2
+   pe102$occ <- occ
+   # complete cases only
+   print(summary(lm(wageinc ~ .,data=pe102)))  
+   # Gender bhat now only 8275.05, s.e. increasing to 749.25
+   # polyanNA, no discretization
+   pe3 <- polyanNA(pe102,yCol=6)
+   print(summary(lm.pa(pe3)$lmout))
+   # bhat for gender 8556.45, s.e. 708.78, almost same as full dataset
+}
 
 ### ###########################  lm.marg  ####################################
 ### 
