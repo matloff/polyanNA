@@ -56,6 +56,15 @@ In a call to, say, R's lm() function, any R factor will be converted to
 dummy variables, k-1 of them for a k level factor.  Let's assume we do
 this explicitly, i.e. make this conversion before calling lm().
 
+Let's call this method New NA Level, NNAL.
+
+In this categorical varaible case, NNAL does work out to be IVM (even
+though this is not traditional IVM).  We originally had dummy variables
+for Brown, Blue and Hazel.  With IVM, we'd add one for EyeColor.na, and
+if it is equal to 1, then the dummies for Brown, Blue and Hazel will be
+0 -- i.e. we will indeed be setting EyeColor to 0 and have an indicator
+variable that is 1 in this case. 
+
 *Bias issue, assumptions*
 
 This approach is then bias-free, in the sense that all the various
@@ -76,8 +85,6 @@ We handle this by using our
 [polyreg package](http://github/matloff/polyreg), which forms polynomial
 terms in a *multivariate* context, properly handling the case of
 indicator variables, whose powers need not be computed.
-
-Let's call this method New NA Level, NNAL.
 
 ## NNAL functions in this package:
 
