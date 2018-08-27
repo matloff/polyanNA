@@ -21,11 +21,11 @@ applications themselves.
 Again, all of our methods, both those currently in the package and those
 under development (see below), are **nonimputational**.
 
-## Treating NA as a factor level
+## Extended Factor Method (EFM): treating NA as a factor level
 
-Our first method is an extension of the Indicator Variable Method (IVM),
-to be used on numerical variables, say Age.  It can be described as
-follows.
+Our first method is an extension of the Indicator Variable Method.
+IVM is intended for use on numerical variables, say Age.  It can be
+described as follows.
 
 *IVM method*
 
@@ -43,8 +43,8 @@ useful back in the era before modern, fast computers (Nur, 2010).
 
 *Case of categorical variables*
 
-But if one extends IVM to categorical variables, i.e. R factors,  the
-picture changes radically. 
+To our knowledge, IVM is generally not applied to categorical variables,
+i.e. R factors.  the picture changes radically. 
 
 Say we have a variable EyeColor, taking on values Brown, Blue, Hazel and
 Green, thus an R factor with these three levels.  Then instead of trying
@@ -65,7 +65,10 @@ if it is equal to 1, then the dummies for Brown, Blue and Hazel will be
 0 -- i.e. we will indeed be setting EyeColor to 0 and have an indicator
 variable that is 1 in this case. 
 
-*Bias issue, assumptions*
+*Rationale for EFM*
+
+
+Bias issue, assumptions:
 
 This approach is then bias-free, in the sense that all the various
 conditional distributions involving missingness and our data variables
@@ -74,7 +77,7 @@ a regression coefficient for Brown must now be interpreted as the
 marginal effect on Y of "eye color known to be brown."  If one wants to
 remove that "known to be" qualifier, an assumption is needed (see below.)
 
-*Extension using a polynomial model*
+Extension using a polynomial model:
 
 Now, note that if single NA values are informative, then pairs or
 triplets and so on may also carry information.  In other words, we 
