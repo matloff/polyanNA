@@ -86,7 +86,7 @@ addNAlvl <- function(f,nm)
 {
    f1 <- as.character(f)
    # f1[is.na(f1)] <- paste0(nm,'.na')
-   f1[is.na(f1)] <- '.na'
+   f1[is.na(f1)] <- 'na'
    as.factor(f1)
 }
 
