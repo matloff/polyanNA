@@ -203,7 +203,7 @@ predict.lm.pa <- function(lmpa,newx) {
 # illustration of use of polyanNA() and lm.pa() on the prgeng dataset
 # (in regtools package, included by polyanNA)
 
-lm.pa,ex <- function()
+lm.pa.ex <- function()
 {  getPE(Dummies=F)  # 2000 Census
    pe1 <- pe[,c(1,3,5,7:9)]  # age educ occ sex wageinc wkswrkd
    pe1$educ <- as.factor(pe1$educ)
