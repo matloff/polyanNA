@@ -86,7 +86,7 @@ addNAlvl <- function(f,nm)
 {
    f1 <- as.character(f)
    # f1[is.na(f1)] <- paste0(nm,'.na')
-   f1[is.na(f1)] <- paste0(nm,'.na')
+   f1[is.na(f1)] <- '.na'
    as.factor(f1)
 }
 
@@ -211,10 +211,10 @@ lm.pa.ex <- function()
    print(summary(lm(wageinc ~ .,data=pe1)))  # full data
    # bhat for gender 8558.76, s.e. 708.75
    pe2 <- pe1[,c(1,2,3,4,6,5)]
-   # simulate NAs, making high-wage Occ 2 more likely NA
+   # simulate NAs, making high-wage Occ 102, 1042 more likely NA
    occ <- pe2$occ
-   occ102 <- which(occ == '102')
-   forNA <- sample(occ102,2000)
+   occ1024 <- which(occ == '102' | occ == '141')
+   forNA <- sample(occ1024,2000)
    occ[forNA] <- NA
    pe102 <- pe2
    pe102$occ <- occ
