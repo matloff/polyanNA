@@ -99,22 +99,24 @@ against Age, Education, Occupation, Gender and WeeksWorked.
 
 We intentionally inject NA values in the Occupation variable,
 specifically in about 10% of the cases in which Occupation has code 102,
-one of the higher-paying categories.  In this (artificial) 
-setting, the missingness
-of Occupation suggests that the actual value 102 or 104.
+one of the higher-paying categories.  In this (artificial) setting, the
+missingness of Occupation tells us that the actual value 102 or 104.
 
-Here are some estimated
-coefficients:
+We are primarily interested in prediction, but let's look at some
+estimated coefficients:
 
 <pre>
-var.     orig. data     CCM      MIM
-Age      477.65         482.77   475.52
-Gender   8558.76        8641.53  8503.15
-WksWrkd  1298.32        1281.77  1298.14
+var.     orig. data     CCM        MIM
+Occ102   11455.77       11713.99   11627.60 
+Occ140   10852.95       10926.39   10856.78 
+Age      477.65         475.15     475.84
+Gender   8558.76        8398.90    8520.03
+WksWrkd  1298.32        1281.12    1298.37
 </pre>
 
-These numbers are very gratifying. We see that CCM produces a big, but
-that the bias is virtually eliminated by MIM.
+These numbers are very gratifying. We see that CCM produces a bias, but
+that the bias is ameliorated, and in some casesvirtually eliminated, by
+MIM.
 
 *Extension using a polynomial model*
 
