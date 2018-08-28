@@ -101,16 +101,16 @@ We intentionally inject NA values in the Occupation variable,
 specifically in about 10% of the cases in which Occupation has code 102,
 one of the higher-paying categories.  In this (artificial) 
 setting, the missingness
-of Occupation suggests that the actual value may be 102.
+of Occupation suggests that the actual value 102 or 104.
 
 Here are some estimated
 coefficients:
 
 <pre>
 var.     orig. data     CCM      MIM
-Age      477.65         460.27   477.54
-Gender   8558.76        8421.11  8567.58
-WksWrkd  1298.32        1280.20  1298.14
+Age      477.65         482.77   475.52
+Gender   8558.76        8641.53  8503.15
+WksWrkd  1298.32        1281.77  1298.14
 </pre>
 
 These numbers are very gratifying. We see that CCM produces a big, but
