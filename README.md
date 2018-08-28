@@ -54,37 +54,73 @@ lm(), R will convert this one factor to three dummy variables, say
 EyeColor.Brown, EyeColor.Blue and EyeColor.Hazel.  MIM then would add a
 dummy variable for missingness, EyeColor.na, and in rows having a
 value of 1 for this variable, the other three dummies would be set to 0, 
+We then proceed with our regression analysis as usual, using the modified
+EyeColor factor/dummies.
 
 Unlike the case of numeric variables, this doesn't use fake data, and
 produces no distortion.  
 
-We now proceed with our regression analysis as usual, using the modified
-EyeColor factor/dummies.
-
-In a call to, say, R's lm() function, any R factor will be converted to
-dummy variables, k-1 of them for a k level factor.  Let's assume we do
-this explicitly, i.e. make this conversion before calling lm().
-
-*The polyanNA package: the polyanNA() function*
-
-The polyanNA() function inputs a data frame and  converts all factor columns
-according to MIM.  Optionally, the function will discretize the numeric
-columns as well, so that these two can be fed through MIM.
-
+**NOTE:** Below, all mentions of MIM refer to that method as applied to
+categorical variables.
  
-
 *Value of MIM*
 
-As with imputational methods, the non-imputational MIM enables us to
-make use of rows of A having non-missing values, rather than discarding
-them as in the complete-cases method (CCM).  Moreover, MIM treats NA values as
-potentially *informative*.  If the missingness mechanism is not MCAR,
-CCM may induce a bias in our analyses.
+As with imputational methods, the non-imputational MIM is motivated by a
+desire to make use of rows of A having non-missing values, rather than
+discarding them as in the complete-cases method (CCM).  
+
+Moreover, MIM treats NA values as potentially *informative*; ignoring
+them may induce a bias.  MIM, may reduce this bias, by indirectly
+accounting for the distributional interactions between missingness and
+other variables.  This occurs, for instance, in the cross-product terms
+in A'A and A'B, where the lm() coefficient vector is (A'A)<sup>-1</sup>
+A'B.
+
+
+*The polyanNA package*
+
+The first method offered in this package implements MIM for factors,
+both in its traditional form, and with an extension to be described
+below.
+
+The polyanNA() function inputs a data frame and  converts all factor
+columns according to MIM.  Optionally, the function will discretize the
+numeric columns as well, so that these two can be fed through MIM.
+
+There is also function lm.pa(), with an assciated predict(), to
+implement linear modeling an predictor in the settings in which
+categorical variables are subject to missingness.
+
+*Example* 
+
+The function lm.pa.ex(), included in the package, inputs some Census
+data on programmer and engineer wages in 2000.  It regresses WageIncome
+against Age, Education, Occupation, Gender and WeeksWorked.
+
+We intentionally inject NA values in the Occupation variable,
+specifically in about 10% of the cases in which Occupation has code 102,
+one of the higher-paying categories.  In this (artificial) 
+setting, the missingness
+of Occupation suggests that the actual value may be 102.
+
+Here are some estimated
+coefficients:
+
+<pre>
+var.     orig. data     CCM      MIM
+Age      477.65         460.27   477.54
+Gender   8558.76        8421.11  8567.58
+WksWrkd  1298.32        1280.20  1298.14
+</pre>
+
+These numbers are very gratifying. We see that CCM produces a big, but
+that the bias is virtually eliminated by MIM.
 
 *Extension using a polynomial model*
 
 Now, note that if single NA values are informative, then pairs or
-triplets and so on may also carry information.  In other words, we 
+triplets and so on may carry further information.  
+In other words, we 
 should consider forming products of the dummy variables, between one of
 the original factors and another.
 
