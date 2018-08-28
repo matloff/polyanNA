@@ -1,13 +1,14 @@
 # polyanNA
 
 Novel, **nonimputational**  methods for handling missing values in
-regression applications.
+prediction applications.
 
 ## Overview
 
 The intended class of applications is regression modeling, at this time
 linear and generalized linear models (nonparametric/ML models to be
-included later).
+included later).  Our emphasis is on prediction, rather than on
+estimation of regression coefficients and the like.
 
 To make things concrete, say we are regressing Y on a vector X of length
 p.  We have data in a matrix D of n rows, thus of dimensions n X p.
@@ -21,15 +22,14 @@ applications themselves.
 Again, all of our methods, both those currently in the package and those
 under development (see below), are **nonimputational**.
 
-## Extended Factor Method (EFM): treating NA as a factor level
+## Polynomial extension of the Missing-Indicator Method
 
-Our first method is an extension of the Indicator Variable Method.
-IVM is intended for use on numerical variables, say Age.  It can be
-described as follows.
+Our first method is an extension of the Missing-Indicator Method
+(Miettinen, 1985).  MIM can be described as follows.
 
-*IVM method*
+*MIM method*
 
-Say X includes some numeric variable, say Age. IVM add a new column
+Say X includes some numeric variable, say Age. MIM add a new column
 to A, say Age.NA, consisting of 1s and 0s.  For any row in A for
 which Age is NA, the NA is replaced by 0, and Age.NA is set to 1;
 otherwise Age.NA is 0.  So rather than trying to get the missing
@@ -38,46 +38,50 @@ being carried in Age.NA.
 
 It is clear that the insertion of that 0 value -- fake and likely highly
 inaccurate data -- can induce substantial bias, say in the regression
-coefficient of Age.  Indeed, some authors have dismissed IVM as only
-useful back in the era before modern, fast computers (Nur, 2010).  
+coefficient of Age.  Indeed, some authors have dismissed MIM as only
+useful back in the era before modern, fast computers (Nur, 2010) that
+can handle computationally intensive imputational methods.
 
 *Case of categorical variables*
 
-To our knowledge, IVM is generally not applied to categorical variables,
-i.e. R factors.  the picture changes radically. 
+However, now consider categorical variables, i.e. R factors.  Here,
+instead of adding a fake 0, we in essence merely add a legitimate new
+level to the factor (Jones, 1996).
 
-Say we have a variable EyeColor, taking on values Brown, Blue, Hazel and
-Green, thus an R factor with these three levels.  Then instead of trying
-to impute the NAs, we add a new level, EyeColor.na to this factor.  We
-now proceed with our regression analysis as usual, using the modified
-Age variable.
+Say we have a predictor variable EyeColor, taking on values Brown, Blue,
+Hazel and Green, thus an R factor with these four levels.  In, say,
+lm(), R will convert this one factor to three dummy variables, say
+EyeColor.Brown, EyeColor.Blue and EyeColor.Hazel.  MIM then would add a
+dummy variable for missingness, EyeColor.na, and in rows having a
+value of 1 for this variable, the other three dummies would be set to 0, 
+
+Unlike the case of numeric variables, this doesn't use fake data, and
+produces no distortion.  
+
+We now proceed with our regression analysis as usual, using the modified
+EyeColor factor/dummies.
 
 In a call to, say, R's lm() function, any R factor will be converted to
 dummy variables, k-1 of them for a k level factor.  Let's assume we do
 this explicitly, i.e. make this conversion before calling lm().
 
-Let's call this method New NA Level, NNAL.
+*The polyanNA package: the polyanNA() function*
 
-In this categorical varaible case, NNAL does work out to be IVM (even
-though this is not traditional IVM).  We originally had dummy variables
-for Brown, Blue and Hazel.  With IVM, we'd add one for EyeColor.na, and
-if it is equal to 1, then the dummies for Brown, Blue and Hazel will be
-0 -- i.e. we will indeed be setting EyeColor to 0 and have an indicator
-variable that is 1 in this case. 
+The polyanNA() function inputs a data frame and  converts all factor columns
+according to MIM.  Optionally, the function will discretize the numeric
+columns as well, so that these two can be fed through MIM.
 
-*Rationale for EFM*
+ 
 
+*Value of MIM*
 
-Bias issue, assumptions:
+As with imputational methods, the non-imputational MIM enables us to
+make use of rows of A having non-missing values, rather than discarding
+them as in the complete-cases method (CCM).  Moreover, MIM treats NA values as
+potentially *informative*.  If the missingness mechanism is not MCAR,
+CCM may induce a bias in our analyses.
 
-This approach is then bias-free, in the sense that all the various
-conditional distributions involving missingness and our data variables
-is accounted for.  To be sure, one must keep in mind that, for instance,
-a regression coefficient for Brown must now be interpreted as the
-marginal effect on Y of "eye color known to be brown."  If one wants to
-remove that "known to be" qualifier, an assumption is needed (see below.)
-
-Extension using a polynomial model:
+*Extension using a polynomial model*
 
 Now, note that if single NA values are informative, then pairs or
 triplets and so on may also carry information.  In other words, we 
