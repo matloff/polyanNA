@@ -14,7 +14,7 @@
 
 #    xy: input data frame, X and Y in training case, only X in 
 #        new data (prediction) case
-#    yCol: column number of Y, training case
+#    yCol: column number of Y, needed in training case
 #    breaks: if non-NULL, number of desired levels in the discretized 
 #       vector (not counting 'na')
 #    allCodeInfo: in the new-data case, an R list, one element for each
@@ -67,8 +67,9 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
    naByCol <- apply(x,2,function(col) any(is.na(col)))
    for (i in 1:ncol(x)) {
       if (naByCol[i]) {  # any NAs in this col?
-         nm <- names(x)[i]
-         if (is.factor(x[,i])) x[,i] <- addNAlvl(x[,i],nm) 
+         # nm <- names(x)[i]
+         # if (is.factor(x[,i])) x[,i] <- addNAlvl(x[,i],nm) 
+         if (is.factor(x[,i])) x[,i] <- addNAlvl(x[,i]) 
       }
    }
    if (!newdata) xy[,-yCol] <- x else xy <- x
@@ -82,7 +83,8 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
 # if factor f has any NAs, add a new level to the factor, 'na', and
 # replace any NAs by this level
 
-addNAlvl <- function(f,nm)
+# addNAlvl <- function(f,nm)
+addNAlvl <- function(f)
 {
    f1 <- as.character(f)
    # f1[is.na(f1)] <- paste0(nm,'.na')
@@ -198,12 +200,14 @@ predict.lm.pa <- function(lmpa,newx) {
    predict(lmpa$lmout,newx$xy)
 }
 
-#########################  lm.pa() example ###################################
+#########################  lm.pa() examples ###################################
 
 # illustration of use of polyanNA() and lm.pa() on the prgeng dataset
 # (in regtools package, included by polyanNA)
 
-lm.pa.ex <- function()
+# in this one, artifically inject NAs into the highest-wage occupations
+
+lm.pa.ex1 <- function()
 {  getPE(Dummies=F)  # 2000 Census
    pe1 <- pe[,c(1,3,5,7:9)]  # age educ occ sex wageinc wkswrkd
    pe1$educ <- as.factor(pe1$educ)
@@ -222,6 +226,39 @@ lm.pa.ex <- function()
    # polyanNA, no discretization
    pe3 <- polyanNA(pe102,yCol=6)
    print(summary(lm.pa(pe3)$lmout))
+}
+
+# here, set up an MCAR situation, NAs in categorical variables only
+
+lm.pa.ex2 <- function()
+{  getPE(Dummies=F)  # 2000 Census
+   pe1 <- pe[,c(1,3,5,7:9)]  # age educ occ sex wageinc wkswrkd
+   pe1$educ <- as.factor(pe1$educ)
+   pe1$occ <- as.factor(pe1$occ)
+   pe1$sex <- as.factor(pe1$sex)
+   print(summary(lm(wageinc ~ .,data=pe1)))  # full data
+   pe2 <- pe1[,c(1,2,3,4,6,5)]
+   pe2.save <- pe2
+   tstidxs <- sample(1:nrow(pe2),2000)
+   pe2trn <- pe2[-tstidxs,]
+   pe2tst <- pe2[tstidxs,]
+   lmout.full <- lm(wageinc ~ .,data=pe2trn)
+   ypred.full <- predict(lmout.full,pe2tst[,-6])
+   print(mean(abs(ypred.full-pe2tst[,6])))
+   pe2 <- pe2.save
+   for (i in 2:4) {
+      naSpots <- sample(1:nrow(pe2),2000)
+      pe2[naSpots,i] <- NA
+   }
+   pe2trn <- pe2[-tstidxs,]
+   pe2tst <- pe2[tstidxs,]
+   lmout.cc <- lm(wageinc ~ .,data=pe2trn)
+   ypred.cc <- predict(lmout.cc,pe2tst[,-6])
+   print(mean(abs(ypred.cc-pe2tst[,6]),na.rm=TRUE))
+   pe2trn.pa <- polyanNA(pe2trn,yCol=6)
+   lmout.pa <- lm.pa(pe2trn.pa)
+   ypred.pa <- predict(lmout.pa,pe2tst[,-6])
+   print(mean(abs(ypred.pa-pe2tst[,6])))
 }
 
 ### ###########################  lm.marg  ####################################
