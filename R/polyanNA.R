@@ -246,10 +246,15 @@ lm.pa.ex2 <- function()
    ypred.full <- predict(lmout.full,pe2tst[,-6])
    print(mean(abs(ypred.full-pe2tst[,6])))
    pe2 <- pe2.save
-   for (i in 2:4) {
-      naSpots <- sample(1:nrow(pe2),2000)
-      pe2[naSpots,i] <- NA
-   }
+##    for (i in 2:4) {
+##       naSpots <- sample(1:nrow(pe2),2000)
+##       pe2[naSpots,i] <- NA
+##    }
+   occ <- pe2$occ
+   occ1024 <- which(occ == '102' | occ == '141')
+   forNA <- sample(occ1024,4000)
+   occ[forNA] <- NA
+   pe2$occ <- occ
    pe2trn <- pe2[-tstidxs,]
    pe2tst <- pe2[tstidxs,]
    lmout.cc <- lm(wageinc ~ .,data=pe2trn)
