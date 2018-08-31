@@ -211,7 +211,8 @@ lm.pa.ex1 <- function()
    pe1 <- pe[,c(1,3,5,7:9)]  # age educ occ sex wageinc wkswrkd
    pe1$educ <- as.factor(pe1$educ)
    pe1$occ <- as.factor(pe1$occ)
-   print(summary(lm(wageinc ~ .,data=pe1)))  # full data
+   lmout <- lm(wageinc ~ .,data=pe1)  # full data
+   print(lmout$coef)
    pe2 <- pe1[,c(1,2,3,4,6,5)]
    # simulate NAs, making high-wage Occ 102, 1042 more likely NA
    occ <- pe2$occ
@@ -221,10 +222,14 @@ lm.pa.ex1 <- function()
    pe102 <- pe2
    pe102$occ <- occ
    # complete cases only
-   print(summary(lm(wageinc ~ .,data=pe102)))  
+   # print(summary(lm(wageinc ~ .,data=pe102)))  
+   lmout <- lm(wageinc ~ .,data=pe102)  # full data
+   print(lmout$coef)
    # polyanNA, no discretization
    pe3 <- polyanNA(pe102,yCol=6)
-   print(summary(lm.pa(pe3)$lmout))
+   # print(summary(lm.pa(pe3)$lmout))
+   lmout <- lm(wageinc ~ .,data=pe3$xy)  # full data
+   print(lmout$coef)
 }
 
 # here, set up an MCAR situation, NAs in categorical variables only
