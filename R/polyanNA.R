@@ -212,7 +212,7 @@ lm.pa.ex1 <- function()
    pe1$educ <- as.factor(pe1$educ)
    pe1$occ <- as.factor(pe1$occ)
    lmout <- lm(wageinc ~ .,data=pe1)  # full data
-   print(lmout$coef)
+   print(lmout$coef['sex'])
    pe2 <- pe1[,c(1,2,3,4,6,5)]
    # simulate NAs, making high-wage Occ 102, 1042 more likely NA
    occ <- pe2$occ
@@ -224,19 +224,20 @@ lm.pa.ex1 <- function()
    # complete cases only
    # print(summary(lm(wageinc ~ .,data=pe102)))  
    lmout <- lm(wageinc ~ .,data=pe102)  # full data
-   print(lmout$coef)
+   print(lmout$coef['sex'])
    # polyanNA, no discretization
    pe3 <- polyanNA(pe102,yCol=6)
    # print(summary(lm.pa(pe3)$lmout))
    lmout <- lm(wageinc ~ .,data=pe3$xy)  # full data
-   print(lmout$coef)
+   print(lmout$coef['sex'])
 }
 
 # here, set up an MCAR situation, NAs in categorical variables only
 
 lm.pa.ex2 <- function()
 {  stop('under construction')
-#### need to change so that only NA cases are predicted
+#### need to change so that only NA cases are predicted, by both
+###  polyanNA and imputational methods
    getPE(Dummies=F)  # 2000 Census
    pe1 <- pe[,c(1,3,5,7:9)]  # age educ occ sex wageinc wkswrkd
    pe1$educ <- as.factor(pe1$educ)
