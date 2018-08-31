@@ -1,17 +1,26 @@
 # polyanNA
 
-Novel, **nonimputational**  methods for handling missing values in
+Novel, **nonimputational**  methods for handling missing values (MVs) in
 prediction applications.
 
 ## Overview
 
 The intended class of applications is regression modeling, at this time
 linear and generalized linear models (nonparametric/ML models to be
-included later).  Our emphasis is on prediction, rather than on
-estimation of regression coefficients and the like.
+included later).  
+
+Unlike most of the MV literature, our emphasis is on prediction, rather
+than on estimation of regression coefficients and the like.  This is
+important first because we are in the era of Big Data, which is
+prediction-oriented, but just as importantly, also because of the issue
+of assumptions.  Most MV methods make strong assumptions, which are
+difficult or impossible to verify.  We posit that the prediction context
+is more robust to the assumptions than is estimation.  This would be
+similar to the non-MV setting, in which models can be rather
+questionable yet still have strong predictive power.
 
 To make things concrete, say we are regressing Y on a vector X of length
-p.  We have data in a matrix D of n rows, thus of dimensions n X p.
+p.  We have data in a matrix A of n rows, thus of dimensions n X p.
 Some of the elements of A are missing, i.e. are NA values in R.
 
 Note carefully that in describing our methods as being for regression
@@ -29,18 +38,19 @@ Our first method is an extension of the Missing-Indicator Method
 
 *MIM method*
 
-Say X includes some numeric variable, say Age. MIM add a new column
-to A, say Age.NA, consisting of 1s and 0s.  For any row in A for
-which Age is NA, the NA is replaced by 0, and Age.NA is set to 1;
-otherwise Age.NA is 0.  So rather than trying to get the missing
-value, we treat the missingness as informative, with the information
-being carried in Age.NA.
+Say X includes some numeric variable, say Age. MIM add a new column to
+A, say Age.NA, consisting of 1s and 0s.  Age.NA is a missingness
+indicator for Age:` For any row in A for which Age is NA, the NA is
+replaced by 0, and Age.NA is set to 1; otherwise Age.NA is 0.  So rather
+than trying to get the missing value, we treat the missingness as
+informative, with the information being carried in Age.NA.
 
 It is clear that the insertion of that 0 value -- fake and likely highly
 inaccurate data -- can induce substantial bias, say in the regression
 coefficient of Age.  Indeed, some authors have dismissed MIM as only
-useful back in the era before modern, fast computers (Nur, 2010) that
-can handle computationally intensive imputational methods.
+useful back in the era before modern, fast computers that 
+can handle computationally intensive imputational methods
+(Nur, 2010). 
 
 *Case of categorical variables*
 
