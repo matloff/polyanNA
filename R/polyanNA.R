@@ -155,7 +155,6 @@ test <- function()
    newx <- data.frame(ans=c('no',NA,'yes'),
                       ht=c(NA,70,75),clr=c('G','G','R'))
    polyanNA(newx,allCodeInfo=d1$allCodeInfo)
-browser()
    d1lm <- lm.pa(d1)
    predict(d1lm,newx)
 }
@@ -231,7 +230,9 @@ lm.pa.ex1 <- function()
 # here, set up an MCAR situation, NAs in categorical variables only
 
 lm.pa.ex2 <- function()
-{  getPE(Dummies=F)  # 2000 Census
+{  stop('under construction')
+#### need to change so that only NA cases are predicted
+   getPE(Dummies=F)  # 2000 Census
    pe1 <- pe[,c(1,3,5,7:9)]  # age educ occ sex wageinc wkswrkd
    pe1$educ <- as.factor(pe1$educ)
    pe1$occ <- as.factor(pe1$occ)
@@ -239,7 +240,7 @@ lm.pa.ex2 <- function()
    print(summary(lm(wageinc ~ .,data=pe1)))  # full data
    pe2 <- pe1[,c(1,2,3,4,6,5)]
    pe2.save <- pe2
-   tstidxs <- sample(1:nrow(pe2),2000)
+   tstidxs <- sample(1:nrow(pe2),4000)
    pe2trn <- pe2[-tstidxs,]
    pe2tst <- pe2[tstidxs,]
    lmout.full <- lm(wageinc ~ .,data=pe2trn)
@@ -258,6 +259,7 @@ lm.pa.ex2 <- function()
    pe2trn <- pe2[-tstidxs,]
    pe2tst <- pe2[tstidxs,]
    lmout.cc <- lm(wageinc ~ .,data=pe2trn)
+   browser()
    ypred.cc <- predict(lmout.cc,pe2tst[,-6])
    print(mean(abs(ypred.cc-pe2tst[,6]),na.rm=TRUE))
    pe2trn.pa <- polyanNA(pe2trn,yCol=6)
