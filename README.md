@@ -31,7 +31,13 @@ applications themselves.
 Again, all of our methods, both those currently in the package and those
 under development (see below), are **nonimputational**.
 
-## Polynomial extension of the Missing-Indicator Method
+## Contributions of This Package
+
+1. Extensions of the Missing-Indicator Method.
+
+2. A novel approach, based on the Tower Property.
+
+## Extendced the Missing-Indicator Method
 
 Our first method is an extension of the Missing-Indicator Method
 (Miettinen, 1985).  MIM can be described as follows.
@@ -77,10 +83,11 @@ categorical variables.
 
 As with imputational methods, the non-imputational MIM is motivated by a
 desire to make use of rows of A having non-missing values, rather than
-discarding them as in the complete-cases method (CCM).  
+discarding them as in the complete-cases method (CCM).  Note that this
+is crucial in our prediction context; CCM simply won't work here.
 
 Moreover, MIM treats NA values as potentially *informative*; ignoring
-them may induce a bias.  MIM, may reduce this bias, by indirectly
+them may induce a bias.  MIM may reduce this bias, by indirectly
 accounting for the distributional interactions between missingness and
 other variables.  This occurs, for instance, in the cross-product terms
 in A'A and A'B, where the lm() coefficient vector is (A'A)<sup>-1</sup>
@@ -90,7 +97,7 @@ A'B.
 *The polyanNA package*
 
 The first method offered in this package implements MIM for factors,
-both in its traditional form, and with an extension to be described
+both in its traditional form, and with extensions to be described
 below.
 
 The polyanNA() function inputs a data frame and  converts all factor
@@ -98,7 +105,7 @@ columns according to MIM.  Optionally, the function will discretize the
 numeric columns as well, so that these two can be fed through MIM.
 
 There is also function lm.pa(), with an assciated predict(), to
-implement linear modeling an predictor in the settings in which
+implement linear modeling and prediction in the settings in which
 categorical variables are subject to missingness.
 
 *Example* 
@@ -109,11 +116,38 @@ against Age, Education, Occupation, Gender and WeeksWorked.
 
 We intentionally inject NA values in the Occupation variable,
 specifically in about 10% of the cases in which Occupation has code 102,
-one of the higher-paying categories.  In this (artificial) setting, the
-missingness of Occupation tells us that the actual value 102 or 104.
+one of the higher-paying categories:  
 
-We are primarily interested in prediction, but let's look at some
-estimated coefficients:
+```
+> tapply(pe$wageinc,pe$occ,mean)
+     100      101      102      106      140      141 
+50396.47 51373.53 68797.72 53639.86 67019.26 69494.44 
+```
+
+In this (artificial) setting, the missingness of Occupation tells us
+that the actual value 102 or 104.
+
+This experiment is interesting because the proportion of women in those
+two occupations is low:
+
+```
+> table(pe[,c(5,7)])
+     sex
+occ      0    1
+  100 1530 3062
+  101 1153 3345
+  102 1607 5213
+  106  209  292
+  140  127  675
+  141  282 2595
+```
+
+The fact that there are fewer women in occupations 102 and 140, two
+high-paying occupations, a naive regression analysis use CCM might bias
+the gender effect downward.  Let's see.
+
+Though we are primarily interested in prediction, let's look at the
+estimated coefficient for Gender.
 
 <pre>
 var.     orig. data     CCM        MIM
