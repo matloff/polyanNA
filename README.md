@@ -150,17 +150,16 @@ Though we are primarily interested in prediction, let's look at the
 estimated coefficient for Gender.
 
 <pre>
-var.     orig. data     CCM        MIM
-Occ102   11455.77       11713.99   11627.60 
-Occ140   10852.95       10926.39   10856.78 
-Age      477.65         475.15     475.84
-Gender   8558.76        8398.90    8520.03
-WksWrkd  1298.32        1281.12    1298.37
+Run    full           CC         MIM
+1      8558.765       8391.369   8581.544 
+2      8558.765       8358.057   8438.852 
+3      8558.765       8717.961   8544.091
+4      8558.765       8573.875   8585/638
+5      8558.765       8270.693   8473.888
 </pre>
 
 These numbers are very gratifying. We see that CCM produces a bias, but
-that the bias is ameliorated, and in some casesvirtually eliminated, by
-MIM.
+that the bias is ameliorated by MIM.
 
 *Extension using a polynomial model*
 
@@ -175,9 +174,18 @@ We handle this by using our
 terms in a *multivariate* context, properly handling the case of
 indicator variables, whose powers need not be computed.
 
-## NNAL functions in this package:
+*MIM functions in this package*
 
+**polyanNA(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)**
+
+Applies MIM to all columns in xy that are factors, other than a Y column
+if present (non-NULL yCol, with the value indicating the column number
+of Y).  Optionally first discretizes all numeric columns (other than Y),
+setting breaks levels.  When applied to "new data" after fitting, say,
+lm(), set allCodeInfo to the value returned by polyanNA() on the old
+data.
  
+**lm.pa(paout,maxDeg=1,maxInteractDeg=1)**
 
 ## Coming attractions
 
