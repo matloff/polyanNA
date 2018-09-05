@@ -1,10 +1,11 @@
 
 #########################  polyanNA  ##################################
 
-# assumption-free missing value method, for a prediction context
+# implements generalization of the Missing-Indicator Method
 
-# the goal is to have polyanNA() run on both the training data and new
-# data; some of the arguments have different meanings in the two cases
+# the goal is to have polyanNA() run on both the training data and later
+# on new data; some of the arguments have different meanings in the two
+# cases
 
 # typical usage: apply polyanNA() to training data; then run lm() or
 # whatever; then run polyanNA() on the new data and feed the result into
@@ -15,28 +16,33 @@
 #    xy: input data frame, X and Y in training case, only X in 
 #        new data (prediction) case
 #    yCol: column number of Y, needed in training case
-#    breaks: if non-NULL, number of desired levels in the discretized 
-#       vector (not counting 'na')
-#    allCodeInfo: in the new-data case, an R list, one element for each
-#       column of X; the element is NULL unless that column had been
-#       discretized in the original, in which it is the codeInfo
+#    breaks: if non-NULL, number of desired levels in discretized 
+#       vectors (not counting added 'na')
+#    allCodeInfo: in the new-data case, an R list, obtained via a call
+#    to polyanNA() in the training data (else NULL), one element for 
+#       each column of X; the element is NULL unless that column had 
+#       been discretized in the original, in which it is the codeInfo
 #       attribute from that operation 
 
 # we'll use x here to refer to xy without the Y column, if any
 
-# if breaks is non_NULL, then the numeric columns are run through #
+# if breaks is non_NULL, then the numeric columns are run through 
 # 'discretize', and converted to factors 
 
 # then for each column in x that is a factor and has at least one NA
 # value, add an 'na' level and recode the NA values to that level; that
 # way, one can account for the potential predictive information that an
-# NA value may convey
+# NA value may convey; replace the factor by the corresponding dummies
 
-# to account for multiple interactions between NAs etc., run the result
-# through polyreg
+# to account for multiple interactions between NAs etc., run the full
+# set of dummies through polyreg
 
 polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL) 
 {
+
+   if (!is.data.frame(xy)) xy <- as.data.fraem(xy)
+
+   # training-data or new-data case?
    newdata <- is.null(yCol)
    x <- if (newdata) xy else xy[,-yCol,drop=FALSE] 
    if (newdata) {
@@ -45,12 +51,19 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
    } else { # training case
       allCodeInfo <- list(length = ncol(x))
       for (i in 1:ncol(x)) 
+         # no code info yet, working on it in next block below
          allCodeInfo[[i]] <- 'no code info'
    }
-   # any columns need to be discretized?
+
+   # any columns need to be discretized?; in training-date case, this
+   # will be indicated by user specifying 'breaks'; in new-data case,
+   # there will be code info from the previous call on the training data
    needDisc <- !is.null(breaks) || any(allCodeInfo != 'no code info')
    if (needDisc) {
       for (i in 1:ncol(x)) {
+         # in training-data case, need to discretize if numeric; in
+         # new-data case, need if this column had been discretized in
+         # the training-data phasejj
          if (!newdata && is.numeric(x[,i]) || 
                 allCodeInfo[[i]] != 'no code info') {
             # discretize and make it a factor
@@ -58,21 +71,28 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
                if (newdata) allCodeInfo[[i]] else NULL
             nLevels <- if (newdata) NULL else breaks
             tmp <- discretize(x[,i],nLevels,codeInfo)
-            x[,i] <- tmp$xDisc
+            x[,i] <- tmp$xDisc  # note: now an R factor
             allCodeInfo[[i]] <- tmp$codeInfo
          }
       }
    }
-   # which columns have NAs and need to be converted?
-   naByCol <- apply(x,2,function(col) any(is.na(col)))
-   for (i in 1:ncol(x)) {
-      if (naByCol[i]) {  # any NAs in this col?
-         # nm <- names(x)[i]
-         # if (is.factor(x[,i])) x[,i] <- addNAlvl(x[,i],nm) 
-         if (is.factor(x[,i])) x[,i] <- addNAlvl(x[,i]) 
+
+   # which factor columns have NAs and need to be converted?
+   naByCol <- which(apply(x,2,function(col) any(is.na(col))))
+   for (i in naByCol) {
+      if (is.factor(x[,i])) {
+         tmp <- addNAlvl(x[,i])
+         tmp <- dummy(tmp)
+         dumms <- tmp[,-ncol(tmp),drop=FALSE]
+         x <- cbind(x,dumms)
       }
    }
-   if (!newdata) xy[,-yCol] <- x else xy <- x
+   x[,naByCol] <- NULL
+
+   # if (!newdata) xy[,-yCol] <- x else xy <- x
+   if (!newdata) xy <- cbind(x,xy[,yCol]) else xy <- xj
+   
+   # xy[,-yCol] <- x else xy <- x
    val <- list(xy=xy, allCodeInfo=allCodeInfo)
    class(val) <- 'pa'
    val
