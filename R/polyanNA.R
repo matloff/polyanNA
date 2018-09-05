@@ -55,25 +55,30 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
          allCodeInfo[[i]] <- 'no code info'
    }
 
-   # any columns need to be discretized?; in training-date case, this
-   # will be indicated by user specifying 'breaks'; in new-data case,
-   # there will be code info from the previous call on the training data
-   needDisc <- !is.null(breaks) || any(allCodeInfo != 'no code info')
-   if (needDisc) {
-      for (i in 1:ncol(x)) {
-         # in training-data case, need to discretize if numeric; in
-         # new-data case, need if this column had been discretized in
-         # the training-data phasejj
-         if (!newdata && is.numeric(x[,i]) || 
-                allCodeInfo[[i]] != 'no code info') {
-            # discretize and make it a factor
-            codeInfo <- 
-               if (newdata) allCodeInfo[[i]] else NULL
-            nLevels <- if (newdata) NULL else breaks
-            tmp <- discretize(x[,i],nLevels,codeInfo)
-            x[,i] <- tmp$xDisc  # note: now an R factor
-            allCodeInfo[[i]] <- tmp$codeInfo
-         }
+   # go through each column, doing the following:
+
+   # training case:
+   #    if numeric and user wants discretization then discretize
+   #    if factor (inc. discretized) record levels in allCodeInfo[[i]]
+   # new-date case:
+   #    if numeric and had been discretized in training phase then
+   #       discretize here
+   for (i in 1:ncol(x)) {
+      if (!newdata) {
+      }
+
+      FIX HERE, PER COMMENTS ABOVE
+
+
+      if (!newdata && is.numeric(x[,i]) || 
+             allCodeInfo[[i]] != 'no code info') {
+         # discretize and make it a factor
+         codeInfo <- 
+            if (newdata) allCodeInfo[[i]] else NULL
+         nLevels <- if (newdata) NULL else breaks
+         tmp <- discretize(x[,i],nLevels,codeInfo)
+         x[,i] <- tmp$xDisc  # note: now an R factor
+         allCodeInfo[[i]] <- tmp$codeInfo
       }
    }
 
