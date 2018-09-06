@@ -52,7 +52,7 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
       allCodeInfo <- list(length = ncol(x))
       for (i in 1:ncol(x)) 
          # no code info yet, working on it in next block below
-         allCodeInfo[[i]] <- 'no code info'
+         allCodeInfo[[i]] <- list()
    }
 
    # go through each column, doing the following:
@@ -63,8 +63,16 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
    # new-date case:
    #    if numeric and had been discretized in training phase then
    #       discretize here
-   for (i in 1:ncol(x)) {
-      if (!newdata) {
+   if (!newdata) {
+      allCodeInfo <- list(length=ncol(x))
+      for (i in 1:ncol(x)) {
+         allCodeInfo[[i]] <- list()
+      }
+      for (i in 1:ncol(x)) {
+         if(is.numeric(x[,i]) && !is.null(breaks)) {
+         }
+         if (is.factor(x[,i]))
+            allCodeInfo[[i]] <- 
       }
 
       FIX HERE, PER COMMENTS ABOVE
