@@ -71,7 +71,11 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
             x[,i] <- tmp$xDisc  # note: now becomes a factor
             allCodeInfo[[i]]$codeInfo <- tmp$codeInfo 
          }
-         if (is.factor(x[,i])) allCodeInfo[[i]]$lvls  <- levels(x[,i])
+         if (is.factor(x[,i]))  {
+            x[,i] <- addNAlvl(x[,i])
+            allCodeInfo[[i]]$lvls  <- levels(x[,i])
+         }
+         
       }
    } else  { # new data phase
          tmp <- discretize(x[,i],NULL,allCodeInfo[[i]])
@@ -80,22 +84,13 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
 
    # which factor columns have NAs and need to be converted to dummies?
    naByCol <- which(apply(x,2,function(col) any(is.na(col))))
-   if (!newdata) {  # training phase
+   browser()
       for (i in naByCol) {
          if (is.factor(x[,i]))  {
-            xidumms <- convertToDumms(x[,i])
-         }
-         
-         
-         {
-            tmp <- addNAlvl(x[,i])
-            tmp <- makeDummies(tmp)
-            dumms <- tmp[,-ncol(tmp),drop=FALSE]
+            lvls <- allCodeInfo[[i]]$lvls 
+            xidumms <- convertToDumms(x[,i],lvls,names(newdata)[i])
             x <- cbind(x,dumms)
          }
-      }
-      x[,naByCol] <- NULL
-   } else {  # new data phase
    }
 
    # if (!newdata) xy[,-yCol] <- x else xy <- x
@@ -188,12 +183,21 @@ test <- function()
    predict(d1lm,newx)
 }
 
-# ********************     cpWithAttrr    ##################################
+########################  convertToDumms()  ###############################
 
-# R attributes do NOT get copied upon assignment, so need this
+# takes the factor xf with k levels excl. 'na', and converts it to a
+# data frame of k columns, one for each non-'na' level, with labels of
+# the form u.v, u being the original col name and v being the level
 
-require(gtools)
-cpWithAttr <- defmacro(x,y,xattr,expr={y <- x; attr(y,xattr) <- attr(x,xattr)})
+convertToDumms <- function(xfr,lvls,xfrname) 
+{
+   require(dummies)
+   tmp <- dummy(xfr,sep='.')
+   tmp[['xfr.na']] <- NULL
+   names(tmp) <- gsub('xfr.','',names(tmp))
+   lvls1 <- lvls[lvls != 'na']
+   tmp[,lvls1]
+}
 
 ####################    lm.pa(), predict.lm.pa()    #########################
 
