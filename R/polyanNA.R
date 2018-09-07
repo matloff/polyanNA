@@ -63,13 +63,20 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
    # new-date case:
    #    if numeric and had been discretized in training phase then
    #       discretize here
-   if (!newdata) {  # training phase
+###   if (!newdata) {  # training phase
       for (i in 1:ncol(x)) {
-         allCodeInfo[[i]]$lvls <- NULL
-         if(is.numeric(x[,i]) && !is.null(breaks)) {
-            tmp <- discretize(x[,i],breaks,NULL)
-            x[,i] <- tmp$xDisc  # note: now becomes a factor
-            allCodeInfo[[i]]$codeInfo <- tmp$codeInfo 
+         if (!newdata) {
+            allCodeInfo[[i]]$lvls <- NULL
+            allCodeInfo[[i]]$codeInfo <- NULL
+         }
+         if(is.numeric(x[,i])) {
+            if (newdata) breaks <- allCodeInfo[[i]]$codeInfo$breaks
+            if (!is.null(breaks)) {
+               tmp <- discretize(x[,i],breaks,codeInfo)
+               x[,i] <- tmp$xDisc  # note: now becomes a factor
+               if (!newdata)
+                  allCodeInfo[[i]]$codeInfo <- tmp$codeInfo 
+            }
          }
          if (is.factor(x[,i]))  {
             x[,i] <- addNAlvl(x[,i])
@@ -77,10 +84,10 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
          }
          
       }
-   } else  { # new data phase
-         tmp <- discretize(x[,i],NULL,allCodeInfo[[i]])
-         x[,i] <- tmp$xDisc  # note: now an R factor
-   }
+###    } else  { # new data phase
+###          tmp <- discretize(x[,i],NULL,allCodeInfo[[i]])
+###          x[,i] <- tmp$xDisc  # note: now an R factor
+###    }
 
    # which factor columns have NAs and need to be converted to dummies?
    naByCol <- which(apply(x,2,function(col) any(is.na(col))))
@@ -94,7 +101,7 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
    }
 
    # if (!newdata) xy[,-yCol] <- x else xy <- x
-   if (!newdata) xy <- cbind(x,xy[,yCol]) else xy <- xj
+   if (!newdata) xy <- cbind(x,xy[,yCol]) else xy <- x
    
    # xy[,-yCol] <- x else xy <- x
    val <- list(xy=xy, allCodeInfo=allCodeInfo)
