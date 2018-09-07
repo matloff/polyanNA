@@ -27,7 +27,8 @@
 # we'll use x here to refer to xy without the Y column, if any
 
 # if breaks is non_NULL, then the numeric columns are run through 
-# 'discretize', and converted to factors 
+# 'discretize', and converted to factors; note that if breaks is NULL in
+# the training phase, any NAs in numeric variables will still be NAs
 
 # then for each column in x that is a factor and has at least one NA
 # value, add an 'na' level and recode the NA values to that level; that
@@ -40,7 +41,7 @@
 polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL) 
 {
 
-   if (!is.data.frame(xy)) xy <- as.data.fraem(xy)
+   if (!is.data.frame(xy)) xy <- as.data.frame(xy)
 
    # training-data or new-data case?
    newdata <- is.null(yCol)
@@ -49,58 +50,53 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
       # assert proper inputs
       stopifnot(is.null(breaks) && !is.null(allCodeInfo))
    } else { # training case
+      stopifnot(is.null(allCodeInfo))
       allCodeInfo <- list(length = ncol(x))
-      for (i in 1:ncol(x)) 
-         # no code info yet, working on it in next block below
-         allCodeInfo[[i]] <- list()
+      for (i in 1:ncol(x)) allCodeInfo[[i]] <- list()
    }
 
    # go through each column, doing the following:
 
    # training case:
-   #    if numeric and user wants discretization then discretize
+   #    if numeric col and user wants discretization then discretize
    #    if factor (inc. discretized) record levels in allCodeInfo[[i]]
    # new-date case:
    #    if numeric and had been discretized in training phase then
    #       discretize here
-   if (!newdata) {
-      allCodeInfo <- list(length=ncol(x))
+   if (!newdata) {  # training phase
       for (i in 1:ncol(x)) {
-         allCodeInfo[[i]] <- list()
-      }
-      for (i in 1:ncol(x)) {
+         allCodeInfo[[i]]$lvls <- NULL
          if(is.numeric(x[,i]) && !is.null(breaks)) {
+            tmp <- discretize(x[,i],breaks,NULL)
+            x[,i] <- tmp$xDisc  # note: now becomes a factor
+            allCodeInfo[[i]]$codeInfo <- tmp$codeInfo 
          }
-         if (is.factor(x[,i]))
-            allCodeInfo[[i]] <- 
+         if (is.factor(x[,i])) allCodeInfo[[i]]$lvls  <- levels(x[,i])
       }
-
-      FIX HERE, PER COMMENTS ABOVE
-
-
-      if (!newdata && is.numeric(x[,i]) || 
-             allCodeInfo[[i]] != 'no code info') {
-         # discretize and make it a factor
-         codeInfo <- 
-            if (newdata) allCodeInfo[[i]] else NULL
-         nLevels <- if (newdata) NULL else breaks
-         tmp <- discretize(x[,i],nLevels,codeInfo)
+   } else  { # new data phase
+         tmp <- discretize(x[,i],NULL,allCodeInfo[[i]])
          x[,i] <- tmp$xDisc  # note: now an R factor
-         allCodeInfo[[i]] <- tmp$codeInfo
-      }
    }
 
-   # which factor columns have NAs and need to be converted?
+   # which factor columns have NAs and need to be converted to dummies?
    naByCol <- which(apply(x,2,function(col) any(is.na(col))))
-   for (i in naByCol) {
-      if (is.factor(x[,i])) {
-         tmp <- addNAlvl(x[,i])
-         tmp <- dummy(tmp)
-         dumms <- tmp[,-ncol(tmp),drop=FALSE]
-         x <- cbind(x,dumms)
+   if (!newdata) {  # training phase
+      for (i in naByCol) {
+         if (is.factor(x[,i]))  {
+            xidumms <- convertToDumms(x[,i])
+         }
+         
+         
+         {
+            tmp <- addNAlvl(x[,i])
+            tmp <- makeDummies(tmp)
+            dumms <- tmp[,-ncol(tmp),drop=FALSE]
+            x <- cbind(x,dumms)
+         }
       }
+      x[,naByCol] <- NULL
+   } else {  # new data phase
    }
-   x[,naByCol] <- NULL
 
    # if (!newdata) xy[,-yCol] <- x else xy <- x
    if (!newdata) xy <- cbind(x,xy[,yCol]) else xy <- xj
