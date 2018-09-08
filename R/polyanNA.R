@@ -176,9 +176,11 @@ discretize <- function(x,nLevels=NULL,codeInfo=NULL) {
 
 test <- function() 
 {
-   ans <- factor(c('yes','no','maybe',NA,'yes','maybe'))
-   ht <- c(62,NA,68,72,68,71)
-   clr <- factor(c('R','R','G','B','B','B'))
+   ans <- factor(c(NA,'no','maybe',NA,'yes','maybe',
+                   'yes','yes','no',NA,'yes','maybe'))
+   ht <- c(62,NA,68,72,68,71,NA,65,70,60,64,73)
+   clr <- 
+      factor(c('R','R','G','B','B','B','B','R','B','G','R','G'))
    y <- runif(6)
    d <- data.frame(ans,ht,clr,y)
    d1 <- polyanNA(d,yCol=4,breaks=2)
