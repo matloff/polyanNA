@@ -84,14 +84,9 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
          }
          
       }
-###    } else  { # new data phase
-###          tmp <- discretize(x[,i],NULL,allCodeInfo[[i]])
-###          x[,i] <- tmp$xDisc  # note: now an R factor
-###    }
 
    # which factor columns have NAs and need to be converted to dummies?
    naByCol <- which(apply(x,2,function(col) any(is.na(col))))
-   browser()
       for (i in naByCol) {
          if (is.factor(x[,i]))  {
             lvls <- allCodeInfo[[i]]$lvls 
@@ -101,7 +96,11 @@ polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)
    }
 
    # if (!newdata) xy[,-yCol] <- x else xy <- x
-   if (!newdata) xy <- cbind(x,xy[,yCol]) else xy <- x
+   if (!newdata) {
+      nameYcol <- names(xy)[yCol]
+      xy <- cbind(x,xy[,yCol]) 
+      names(xy)[yCol] <- nameYcol
+   } else xy <- x
    
    # xy[,-yCol] <- x else xy <- x
    val <- list(xy=xy, allCodeInfo=allCodeInfo)
@@ -185,7 +184,7 @@ test <- function()
    d1 <- polyanNA(d,yCol=4,breaks=2)
    newx <- data.frame(ans=c('no',NA,'yes'),
                       ht=c(NA,70,75),clr=c('G','G','R'))
-   polyanNA(newx,allCodeInfo=d1$allCodeInfo)
+                      browser()
    d1lm <- lm.pa(d1)
    predict(d1lm,newx)
 }
