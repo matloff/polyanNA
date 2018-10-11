@@ -360,3 +360,33 @@ lm.pa.ex2 <- function()
 ###    }
 ###       
 ### }
+
+#########################  toweranNA  ##################################
+
+# does prediction using the Tower Method to deal with NAs
+
+# arguments:
+
+#    xc: matrix/data frame of "X" values, all complete cases
+#    fittedReg: fitted regression values, e.g. from lm() output,
+#       corresponding to xc
+#    delta: radius of neighborhood of given point 
+#    newx: matrix/data frame of new "X" values
+
+# value: vector of predicted values
+
+
+toweranNA <- function(x,fittedReg,delta,newx) 
+{
+   require(pdist)
+   nc <- ncol(x)
+   preds <- vector(length = nrow(newx))
+   for (i in 1:nrow(newx)) {
+      rw <- newx[i,]
+      intactCols <- which(!is.na(rw))
+      dists <- pdist(rw[intactCols],x[,intactCols,drop=F])@dist
+      withinDelta <- which(dists < delta)
+      preds[i] <- mean(fittedReg[withinDelta])
+   }
+   preds
+}

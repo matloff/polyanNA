@@ -110,7 +110,7 @@ categorical variables are subject to missingness.
 
 *Example* 
 
-The function lm.pa.ex(), included in the package, inputs some Census
+The function lm.pa.ex1(), included in the package, inputs some Census
 data on programmer and engineer wages in 2000.  It regresses WageIncome
 against Age, Education, Occupation, Gender and WeeksWorked.
 
