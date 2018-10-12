@@ -370,23 +370,34 @@ lm.pa.ex2 <- function()
 #    xc: matrix/data frame of "X" values, all complete cases
 #    fittedReg: fitted regression values, e.g. from lm() output,
 #       corresponding to xc
-#    delta: radius of neighborhood of given point 
+#    k: number of nearest neighbors
+#    scaleX: scale xc and newx before prediction
 #    newx: matrix/data frame of new "X" values
 
 # value: vector of predicted values
 
 
-toweranNA <- function(x,fittedReg,delta,newx) 
+toweranNA <- function(x,fittedReg,k,newwx,scaleX=TRUE) 
 {
-   require(pdist)
+   require(FNN)
    nc <- ncol(x)
+   if (scaleX) {
+      x <- scale(x,center=TRUE,scale=TRUE)
+      xmns <- attr(x,'scaled:center')
+      xsds <- attr(x,'scaled:scale')
+   }
    preds <- vector(length = nrow(newx))
    for (i in 1:nrow(newx)) {
       rw <- newx[i,]
       intactCols <- which(!is.na(rw))
-      dists <- pdist(rw[intactCols],x[,intactCols,drop=F])@dist
-      withinDelta <- which(dists < delta)
-      preds[i] <- mean(fittedReg[withinDelta])
+      ic <- intactCols
+      rw <- rw[ic]
+      if (scaleX) {
+         rw <- scale(rw,center=xmns[ic],scale=xsds[ic])
+      }
+      tmp <- FNN::get.knnx(data = x[,ic],query = rw, k = k)
+      nni <- tmp$nn.index
+      preds[i] <- mean(fittedReg[nni])
    }
    preds
 }
