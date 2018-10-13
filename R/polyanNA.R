@@ -377,7 +377,7 @@ lm.pa.ex2 <- function()
 # value: vector of predicted values
 
 
-toweranNA <- function(x,fittedReg,k,newwx,scaleX=TRUE) 
+toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE) 
 {
    require(FNN)
    nc <- ncol(x)
