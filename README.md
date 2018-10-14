@@ -200,12 +200,14 @@ same MIM operations are used both in training and later prediction.
  
 **lm.pa(paout,maxDeg=1,maxInteractDeg=1)**  The degree of polynomial
 used is specified by the remaining two arguments; see the **polyreg**
-documentation for details.
+documentation for details.  [DEGREE > 1 UNDER CONSTRUCTION]
 
 This is a wrapper for **lm()**.  The argument **paout** is the return
 value from a call to **mimPrep()** 
 
 **predict.lm.pa(lmpaout,newx)**
+
+[UNDER CONSTRUCTION]
 
 ## toweranNA(): A novel method based on regression averaging
 
@@ -255,6 +257,30 @@ Our function **toweranNA()** ("tower analysis with NAs") takes this
 approach.  Usually, there will not be many data points having the exact
 value specified for U, so we average over a neighborhood of points near
 that value.
+
+The call form is
+
+**toweranNA(x,fittedReg,k,newx,scaleX=TRUE)**
+
+*Arguments:*
+
+*x*: training set (minus "Y")
+
+*fittedReg*: estimated regression values for the training set
+
+*k*: the number of nearest neighbors 
+
+*newx*: data on new cases to be predicted; must conform to *x* in terms of
+number and names of columns
+
+## Utility functions in this package
+
+**factorsToDummies(df)**
+
+Inspects each column of the data frame **df**.  If a column is numeric,
+it is copies without change.  If it is a factor, it is converted to two
+or more columns of dummy variables.  Return value is the expanded
+version of **df**.
  
 ## References
 
