@@ -1,5 +1,7 @@
 # polyanNA
 
+("Polynomial Analysis with NAs")
+
 Novel, **nonimputational**  methods for handling missing values (MVs) in
 prediction applications.
 
@@ -102,16 +104,16 @@ A'B.
 *The polyanNA package*
 
 The first method offered in our **polyanNA**  package implements MIM for
-factors, both in its traditional form, and with extensions to be
+factors, both in its traditional form, and with polynomial extensions to be
 described below.
 
-The **polyanNA()** function inputs a data frame and  converts all factor
+The **mimPrep()** function inputs a data frame and  converts all factor
 columns according to MIM.  Optionally, the function will discretize the
-numeric columns as well, so that these two can be fed through MIM.
+numeric columns as well, so that they too can be "MIM-ized."
 
 There is also a function **lm.pa()**, with an associated method for the
 generic **predict()**, to implement linear modeling and prediction in
-the settings in which categorical variables are subject to missingness.
+MIM settings, including polynomial MIM.
 
 *Example* 
 
@@ -173,36 +175,86 @@ triplets of NAs and so on may carry further information.  In other
 words, we should consider forming products of the dummy variables,
 between one of the original factors and another.
 
-We handle this by using our 
-[polyreg package](http://github/matloff/polyreg), which forms polynomial
-terms in a *multivariate* context, properly handling the case of
-indicator variables. It accounts for the fact that 
-powers of dummies need not be computed, and that products of dummy
-columns from the same categorical variable will be 0.
+We handle this by using our [polyreg
+package](http://github/matloff/polyreg), which forms polynomial terms in
+a *multivariate* context, properly handling the case of indicator
+variables. It accounts for the fact that powers of dummies need not be
+computed, and that products of dummy columns from the same categorical
+variable will be 0.
 
 *MIM functions in this package*
 
-**polyanNA(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)**
+**mimPrep(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL)**
 
 Applies MIM to all columns in **xy** that are factors, other than a Y
 column if present (non-NULL **yCol**, with the value indicating the
 column number of Y).  Optionally first discretizes all numeric columns
-(other than Y), setting breaks levels.  When applied to "new data" after
-fitting, say, **lm()**, set **allCodeInfo**. to the value returned by
-**polyanNA()** on the original data.
+(other than Y), setting breaks levels.  
+
+Used both on training data and later in prediction.  In the former case,
+**allCodeInfo** is NULL, but in the latter case, after fitting, say,
+**lm()** to the training data, one saves the value of **allCodeInfo** found
+by **mimPrep()** on that data.  Then in predicting new cases, one sets
+**allCodeInfo** to that saved value.  In this manner, we ensure that the
+same MIM operations are used both in training and later prediction.
  
-**lm.pa(paout,maxDeg=1,maxInteractDeg=1)**
+**lm.pa(paout,maxDeg=1,maxInteractDeg=1)**  The degree of polynomial
+used is specified by the remaining two arguments; see the **polyreg**
+documentation for details.
 
+This is a wrapper for **lm()**.  The argument **paout** is the return
+value from a call to **mimPrep()** 
 
+**predict.lm.pa(lmpaout,newx)**
 
-## Coming attractions
+## A novel method based on regression averaging
 
-We are developing further methods, again nonimputational, that exploit
-the Tower Property:  For random variables Y, U and V, E[ E(Y|U,V) | U ]
-= E(Y | U).  What this theoretical abstraction says is that if we take
-the regression function of Y on U and V, and average it over V for fixed
-U, we get the regression function of Y on U.  If V is missing but U is
-known, this is very useful.
+In an early paper (Matloff, 1981), the following result was proved: Fit
+a parametric model (linear or nonlinear) to a sample of size n, then
+average the fitted values, providing an estimate of EY, the population
+unconditional mean of Y.  Then the asymptotic variance of this estimator
+is smaller than that of the sample mean of Y, except if the model is
+linear with a constant term.
+
+That result was motivated by the famous formula
+
+```
+   EY = E[E(Y | X)]
+```
+
+A more general version is known as the Tower Property.  For random
+variables Y, U and V, 
+
+``` 
+   E[ E(Y|U,V) | U ] = E(Y | U) 
+``` 
+   
+What this theoretical abstraction says is that if we take the regression
+function of Y on U and V, and average it over V for fixed U, we get the
+regression function of Y on U.  
+
+If V is missing but U is known, this is very useful.  Take the Census
+data above on programmer and engineer wages, with predictors age,
+education, occupation, gender and number of weeks worked. Say we wish to
+predict case in which age and gender are missing.  Then (under proper
+assumptions), our prediction might be the estimated value of the
+regression function of wage on education, occupation and weeks worked.
+
+Though there are only 5 predictor variables in this dataset, once the
+factors are expanded to dummies, it becomes 23 predictors, with
+2<sup>23</sup> possible NA patterns.  It would be impractical to fit and
+verify marginal regression function models for all these patterns.  
+
+But the Tower Property provides an alternative.  We fit the full model
+to the complete cases in the data, then average that model over all data
+points having education, occupation and weeks worked as in the new case
+to be predicted.  In the Tower Property above, U would be these
+variables, while V would be the vector (age,education).
+
+Our function **toweranNA()** ("tower analysis with NAs") takes this
+approach.  Usually, there will not be many data points having the exact
+value specified for U, so we average over a neighborhood of points near
+that value.
  
 ## References
 
@@ -212,8 +264,9 @@ Data, *Proceedings of the Joint Statistical Meetings*, 2015
 M. Jones, Indicator and Stratification Methods for Missing Explanatory
 Variables in Multiple Linear Regression, *JASA*m 1996
 
-O.S. Miettinen, Regression Analysis, in *Theoretical Epidemiology:
-Principles of Occurrence Research in Medicine*, 1983
+O.S. Miettinen, *Theoretical Epidemiology:
+Principles of Occurrence Research in Medicine*, 1985
 
 S. Soysal *et al*, the Effects of Sample Size and Missing Data Rates on
 Generalizability Coefficients, *Eurasian J. of Ed. Res.*, 2018
+

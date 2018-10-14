@@ -1,14 +1,14 @@
 
-#########################  polyanNA  ##################################
+#########################  mimPrep  ##################################
 
 # implements generalization of the Missing-Indicator Method
 
-# the goal is to have polyanNA() run on both the training data and later
+# the goal is to have mimPrep() run on both the training data and later
 # on new data; some of the arguments have different meanings in the two
 # cases
 
-# typical usage: apply polyanNA() to training data; then run lm() or
-# whatever; then run polyanNA() on the new data and feed the result into
+# typical usage: apply mimPrep() to training data; then run lm() or
+# whatever; then run mimPrep() on the new data and feed the result into
 # predict.pa1()
 
 # arguments:
@@ -19,7 +19,7 @@
 #    breaks: if non-NULL, number of desired levels in discretized 
 #       vectors (not counting added 'na')
 #    allCodeInfo: in the new-data case, an R list, obtained via a call
-#    to polyanNA() in the training data (else NULL), one element for 
+#    to mimPrep() in the training data (else NULL), one element for 
 #       each column of X; the element is NULL unless that column had 
 #       been discretized in the original, in which it is the codeInfo
 #       attribute from that operation 
@@ -38,7 +38,7 @@
 # to account for multiple interactions between NAs etc., run the full
 # set of dummies through polyreg
 
-polyanNA <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL) 
+mimPrep <- function(xy,yCol=NULL,breaks=NULL,allCodeInfo=NULL) 
 {
 
    if (!is.data.frame(xy)) xy <- as.data.frame(xy)
@@ -183,7 +183,7 @@ test <- function()
       factor(c('R','R','G','B','B','B','B','R','B','G','R','G'))
    y <- runif(6)
    d <- data.frame(ans,ht,clr,y)
-   d1 <- polyanNA(d,yCol=4,breaks=2)
+   d1 <- mimPrep(d,yCol=4,breaks=2)
    newx <- data.frame(ans=c('no',NA,'yes'),
                       ht=c(NA,70,75),clr=c('G','G','R'))
                       browser()
@@ -213,7 +213,7 @@ convertToDumms <- function(xfr,lvls,xfrname)
 
 # arguments:
 
-#    paout: object of class'pa', output of polyanNA()
+#    paout: object of class'pa', output of mimPrep()
 #    maxDeg, maxInteractDeg: as in polyFit
 
 lm.pa <- function(paout,maxDeg=1,maxInteractDeg=1) {
@@ -236,14 +236,14 @@ lm.pa <- function(paout,maxDeg=1,maxInteractDeg=1) {
 
 predict.lm.pa <- function(lmpa,newx) {
    # convert newx
-   newx <- polyanNA(newx,allCodeInfo=lmpa$allCodeInfo)
+   newx <- mimPrep(newx,allCodeInfo=lmpa$allCodeInfo)
    predict(lmpa$lmout,newx$xy)
 }
 
 #########################  lm.pa() examples ###################################
 
-# illustration of use of polyanNA() and lm.pa() on the prgeng dataset
-# (in regtools package, included by polyanNA)
+# illustration of use of mimPrep() and lm.pa() on the prgeng dataset
+# (in regtools package, included by mimPrep)
 
 # in this one, artifically inject NAs into the highest-wage occupations
 
@@ -266,8 +266,8 @@ lm.pa.ex1 <- function()
    # print(summary(lm(wageinc ~ .,data=pe102)))  
    lmout <- lm(wageinc ~ .,data=pe102)  # full data
    print(lmout$coef['sex'])
-   # polyanNA, no discretization
-   pe3 <- polyanNA(pe102,yCol=6)
+   # mimPrep, no discretization
+   pe3 <- mimPrep(pe102,yCol=6)
    # print(summary(lm.pa(pe3)$lmout))
    lmout <- lm(wageinc ~ .,data=pe3$xy)  # full data
    print(lmout$coef['sex'])
@@ -309,7 +309,7 @@ lm.pa.ex2 <- function()
    browser()
    ypred.cc <- predict(lmout.cc,pe2tst[,-6])
    print(mean(abs(ypred.cc-pe2tst[,6]),na.rm=TRUE))
-   pe2trn.pa <- polyanNA(pe2trn,yCol=6)
+   pe2trn.pa <- mimPrep(pe2trn,yCol=6)
    lmout.pa <- lm.pa(pe2trn.pa)
    ypred.pa <- predict(lmout.pa,pe2tst[,-6])
    print(mean(abs(ypred.pa-pe2tst[,6])))
