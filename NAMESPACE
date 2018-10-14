@@ -1,7 +1,6 @@
 
 export(mimPrep)
 export(lm.pa)
-export(predict.)
 export(mimPrep)
 export(toweranNA)
 export(factorsToDummies)
