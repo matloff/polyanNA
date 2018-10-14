@@ -207,7 +207,7 @@ value from a call to **mimPrep()**
 
 **predict.lm.pa(lmpaout,newx)**
 
-## A novel method based on regression averaging
+## toweranNA(): A novel method based on regression averaging
 
 In an early paper (Matloff, 1981), the following result was proved: Fit
 a parametric model (linear or nonlinear) to a sample of size n, then
