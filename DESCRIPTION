@@ -6,7 +6,7 @@ Authors@R: c(person("Norman", "Matloff", email = "matloff@cs.ucdavis.edu", role 
            role = c("aut")))
 Description: Non-imputational methods for handling missing values in a
    prediction context.
-Depends: polyreg, gtools
+Depends: polyreg, gtools, FNN
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
