@@ -200,12 +200,14 @@ same MIM operations are used both in training and later prediction.
  
 **lm.pa(paout,maxDeg=1,maxInteractDeg=1)**  The degree of polynomial
 used is specified by the remaining two arguments; see the **polyreg**
-documentation for details.
+documentation for details.  [DEGREE > 1 UNDER CONSTRUCTION]
 
 This is a wrapper for **lm()**.  The argument **paout** is the return
 value from a call to **mimPrep()** 
 
 **predict.lm.pa(lmpaout,newx)**
+
+[UNDER CONSTRUCTION]
 
 ## toweranNA(): A novel method based on regression averaging
 
@@ -256,6 +258,7 @@ approach.  Usually, there will not be many data points having the exact
 value specified for U, so we average over a neighborhood of points near
 that value.
 
+<<<<<<< HEAD
 As an example, we again look at the Census data, randomly culling 100
 observations; on half of those we make education NAs, and make
 occupation NAs in the rest.  Goal is to predict the 100 cases from the
@@ -279,12 +282,37 @@ does slightly better than standard analysis on the non-NA version of the
 data, presumably due to the regression-averaging property mentioned
 earlier.
 
+The call form is
+
+**toweranNA(x,fittedReg,k,newx,scaleX=TRUE)**
+
+*Arguments:*
+
+*x*: training set (minus "Y")
+
+*fittedReg*: estimated regression values for the training set
+
+*k*: the number of nearest neighbors 
+
+*newx*: data on new cases to be predicted; must conform to *x* in terms of
+number and names of columns
+
 ## Assumptions
 
 We will not precisely define assumptions underlying the above methods
 here; roughly, they are similar to those most existing methods.
-However, as noted, our view that prediction contexts are more robust to
-the assumptions, as see in the examples above.
+However, as noted, our view is that prediction contexts are more robust to
+the assumptions, as seen in the examples above.
+
+## Utility functions in this package
+
+**factorsToDummies(df)**
+
+Inspects each column of the data frame **df**.  If a column is numeric,
+it is copies without change.  If it is a factor, it is converted to two
+or more columns of dummy variables.  Return value is the expanded
+version of **df**.
+>>>>>>> 59db52d6d05ddf49719b21a356d417e5e99058ba
  
 ## References
 

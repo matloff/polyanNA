@@ -376,7 +376,6 @@ lm.pa.ex2 <- function()
 
 # value: vector of predicted values
 
-
 toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE) 
 {
    require(FNN)
@@ -401,3 +400,45 @@ toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE)
    }
    preds
 }
+
+initExpt <- function() 
+{
+   getPE(Dummies=F)
+   head(pe)
+   pe1 <- pe[,-c(2,4,6,10,11)]  # age educ occ sex wageinc wkswrkd
+   pe1$educ <- as.factor(pe1$educ)
+   pe1$occ <- as.factor(pe1$occ)
+   pe1 <<- factorsToDummies(pe1)
+}
+
+doExpt <- function()
+{  
+   require(mice)
+   idxs <- sample(1:nrow(pe1),100)
+   lmo <- lm(wageinc ~ .,data=pe1[-idxs,])
+   ftd <- lmo$fitted.values
+   newx <- pe1[idxs,-23]  # delete wageinc, our "Y"
+   newx.cc <- newx 
+   # artifically make some education, occupation rows missing
+   newx[1:50,2:16] <- NA
+   newx[51:100,17:21] <- NA
+   print(system.time(
+      pred.tower <- toweranNA(pe1[-idxs,-23],ftd,10,newx)
+   ))
+   pred.cc <- predict(lmo,newx.cc)
+   acc.tower <- mean(abs(pred.tower - pe1$wageinc[idxs]))
+   acc.cc <- mean(abs(pred.cc - pe1$wageinc[idxs]))
+   pe2 <- rbind(pe1[-idxs,-23],newx)
+   print(system.time(
+      miceout <- mice(pe2,m=1,maxit=50,meth='pmm',printFlag=F)
+   ))
+   print(system.time(
+      pe3 <- complete(miceout)
+   ))
+   newx.mice <- pe3[(nrow(pe3)-99):nrow(pe3),]
+   pred.mice <- predict(lmo,newx.mice)
+   acc.tower <- mean(abs(pred.tower - pe1$wageinc[idxs]))
+   acc.cc <- mean(abs(pred.cc - pe1$wageinc[idxs]))
+   acc.mice <- mean(abs(pred.mice - pe1$wageinc[idxs]))
+   c(acc.tower,acc.cc,acc.mice)
+}                                                                                                     
