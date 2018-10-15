@@ -119,7 +119,7 @@ MIM settings, including polynomial MIM.
 
 The function **lm.pa.ex1()**, included in the package, inputs some Census
 data on programmer and engineer wages in 2000.  It regresses WageIncome
-against Age, Education, Occupation, Gender and WeeksWorked.
+against Age, Education, Occupation, Gender, and WeeksWorked.
 
 We intentionally inject NA values in the Occupation variable,
 specifically in about 10% of the cases in which Occupation has code 102,
@@ -258,7 +258,6 @@ approach.  Usually, there will not be many data points having the exact
 value specified for U, so we average over a neighborhood of points near
 that value.
 
-<<<<<<< HEAD
 As an example, we again look at the Census data, randomly culling 100
 observations; on half of those we make education NAs, and make
 occupation NAs in the rest.  Goal is to predict the 100 cases from the
@@ -284,7 +283,9 @@ earlier.
 
 The call form is
 
-**toweranNA(x,fittedReg,k,newx,scaleX=TRUE)**
+```R
+toweranNA(x, fittedReg, k, newx, scaleX=TRUE)
+```
 
 *Arguments:*
 
@@ -312,8 +313,7 @@ Inspects each column of the data frame **df**.  If a column is numeric,
 it is copies without change.  If it is a factor, it is converted to two
 or more columns of dummy variables.  Return value is the expanded
 version of **df**.
->>>>>>> 59db52d6d05ddf49719b21a356d417e5e99058ba
- 
+
 ## References
 
 X. Gu and N. Matloff, A Different Approach to the Problem of Missing
