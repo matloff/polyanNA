@@ -424,17 +424,17 @@ doExpt <- function()
    newx[51:100,17:21] <- NA
    print(system.time(
       pred.tower <- toweranNA(pe1[-idxs,-23],ftd,10,newx)
-   )
+   ))
    pred.cc <- predict(lmo,newx.cc)
    acc.tower <- mean(abs(pred.tower - pe1$wageinc[idxs]))
    acc.cc <- mean(abs(pred.cc - pe1$wageinc[idxs]))
    pe2 <- rbind(pe1[-idxs,-23],newx)
    print(system.time(
       miceout <- mice(pe2,m=1,maxit=50,meth='pmm',printFlag=F)
-   )
+   ))
    print(system.time(
       pe3 <- complete(miceout)
-   )
+   ))
    newx.mice <- pe3[(nrow(pe3)-99):nrow(pe3),]
    pred.mice <- predict(lmo,newx.mice)
    acc.tower <- mean(abs(pred.tower - pe1$wageinc[idxs]))
