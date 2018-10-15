@@ -255,6 +255,36 @@ Our function **toweranNA()** ("tower analysis with NAs") takes this
 approach.  Usually, there will not be many data points having the exact
 value specified for U, so we average over a neighborhood of points near
 that value.
+
+As an example, we again look at the Census data, randomly culling 100
+observations; on half of those we make education NAs, and make
+occupation NAs in the rest.  Goal is to predict the 100 cases from the
+20090-100 case training set.  We compare to the non-NA version, and to
+predictions made from the imputational package **mice**.  See
+**initExpt()** and **doExpt()** in the package for details.  Results for
+five runs:
+
+```
+non-NA   Tower    mice
+28370.00 27398.10 28808.86
+26818.87 25935.93 27788.55
+31835.29 30130.28 32317.25
+28341.20 27452.43 29163.47
+31131.90 30184.62 31110.37
+```
+
+Tower outperforms **mice** in all cases, and is far faster: Typical
+timing is about 1 second for Tower, 65 seconds for **mice**.  Tower even
+does slightly better than standard analysis on the non-NA version of the
+data, presumably due to the regression-averaging property mentioned
+earlier.
+
+## Assumptions
+
+We will not precisely define assumptions underlying the above methods
+here; roughly, they are similar to those most existing methods.
+However, as noted, our view that prediction contexts are more robust to
+the assumptions, as see in the examples above.
  
 ## References
 
