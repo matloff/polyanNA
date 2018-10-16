@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+scratchwork/
+data/
+lit/
+.DS_Store
+polyanNA.Rproj
