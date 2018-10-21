@@ -256,47 +256,64 @@ variables, while V would be the vector (age,education).
 Our function **toweranNA()** ("tower analysis with NAs") takes this
 approach.  Usually, there will not be many data points having the exact
 value specified for U, so we average over a neighborhood of points near
-that value.
-
-As an example, we again look at the Census data, randomly culling 100
-observations; on half of those we make education NAs, and make
-occupation NAs in the rest.  Goal is to predict the 100 cases from the
-20090-100 case training set.  We compare to the non-NA version, and to
-predictions made from the imputational package **mice**.  See
-**initExpt()** and **doExpt()** in the package for details.  Results for
-five runs:
-
-```
-non-NA   Tower    mice
-28370.00 27398.10 28808.86
-26818.87 25935.93 27788.55
-31835.29 30130.28 32317.25
-28341.20 27452.43 29163.47
-31131.90 30184.62 31110.37
-```
-
-Tower outperforms **mice** in all cases, and is far faster: Typical
-timing is about 1 second for Tower, 65 seconds for **mice**.  Tower even
-does slightly better than standard analysis on the non-NA version of the
-data, presumably due to the regression-averaging property mentioned
-earlier.
+that value.  
 
 The call form is
 
-```R
-toweranNA(x, fittedReg, k, newx, scaleX=TRUE)
+``` r
+toweranNA(x, fittedReg, k, newx, scaleX = TRUE) 
 ```
 
-*Arguments:*
+where the arguments are: the data frame of the "X" data in the
+training set; the vector of fitted regression function values from that
+set; the number of nearest neighbors; and the "X" data frame for the
+data to be predicted.
 
-*x*: training set (minus "Y")
+The number of neighbors is of course a tuning parameter chosen by the
+analyst.  Since we are averaging fitted regression estimates, which are
+by definition already smoothed, a small value of k should work well.  We
+actually set **k = 1** as the default.
 
-*fittedReg*: estimated regression values for the training set
+The function **doExpt1()** allows one to explore the behavior of the
+Tower method on real data.  As an example, we again look at the Census
+data, predicting wage income from age, gender, weeks worked, education
+and occupationr:
 
-*k*: the number of nearest neighbors 
+``` R
+getPE(Dummies=TRUE)
+pe1 <- pe[,c(1:4,6,7,12:16)]
+pe2 <- pe1[,c(1,2,4:11,3)]  # "Y" var last
+ ```
 
-*newx*: data on new cases to be predicted; must conform to *x* in terms of
-number and names of columns
+The function **doExpt1()** randomly culls 500 observations from the
+data, and inserts NAs.  Here we will set education to NA in the first
+250 data points, and set occupation to NA in the rest.  We then compare
+Tower and **mice**.  Below are the mean absolute prediction errors for
+**k = 1**, over five runs, from calling **doExpt1(pe2,4:5,6:10)**.
+
+```
+Tower    mice
+27814.86 28454.95
+24440.01 24907.24
+26860.15 26875.05
+26455.16 26880.92
+28679.61 29334.60
+```
+
+And the same for **k = 5**:
+
+```
+Tower    mice
+26086.31 26929.85 
+22096.91 22863.99 
+26034.20 26582.75 
+25409.16 26021.63 
+24278.39 25021.50 
+```
+
+It is important to note that, in addition to Tower's consistently
+achieving better accuracy than **mice**, Tower is also a lot faster,
+about 4 seconds vs. 31.
 
 ## Assumptions
 
