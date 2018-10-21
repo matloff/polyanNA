@@ -367,7 +367,7 @@ lm.pa.ex2 <- function()
 
 # arguments:
 
-#    xc: matrix/data frame of "X" values, all complete cases
+#    x: matrix/data frame of "X" values, all complete cases
 #    fittedReg: fitted regression values, e.g. from lm() output,
 #       corresponding to xc
 #    k: number of nearest neighbors
@@ -378,6 +378,8 @@ lm.pa.ex2 <- function()
 
 toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE) 
 {
+   if (sum(is.na(x)) > 0)
+      stop('x must be NA-free; call complete.cases()'
    require(FNN)
    nc <- ncol(x)
    if (scaleX) {
