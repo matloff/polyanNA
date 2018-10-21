@@ -413,34 +413,33 @@ initExpt <- function()
    pe1 <<- factorsToDummies(pe1)
 }
 
-doExpt <- function()
-{  
-   require(mice)
-   idxs <- sample(1:nrow(pe1),100)
-   lmo <- lm(wageinc ~ .,data=pe1[-idxs,])
-   ftd <- lmo$fitted.values
-   newx <- pe1[idxs,-23]  # delete wageinc, our "Y"
-   newx.cc <- newx 
-   # artifically make some education, occupation rows missing
-   newx[1:50,2:16] <- NA
-   newx[51:100,17:21] <- NA
-   print(system.time(
-      pred.tower <- toweranNA(pe1[-idxs,-23],ftd,10,newx)
-   ))
-   pred.cc <- predict(lmo,newx.cc)
-   acc.tower <- mean(abs(pred.tower - pe1$wageinc[idxs]))
-   acc.cc <- mean(abs(pred.cc - pe1$wageinc[idxs]))
-   pe2 <- rbind(pe1[-idxs,-23],newx)
-   print(system.time(
-      miceout <- mice(pe2,m=1,maxit=50,meth='pmm',printFlag=F)
-   ))
-   print(system.time(
-      pe3 <- complete(miceout)
-   ))
-   newx.mice <- pe3[(nrow(pe3)-99):nrow(pe3),]
-   pred.mice <- predict(lmo,newx.mice)
-   acc.tower <- mean(abs(pred.tower - pe1$wageinc[idxs]))
-   acc.cc <- mean(abs(pred.cc - pe1$wageinc[idxs]))
-   acc.mice <- mean(abs(pred.mice - pe1$wageinc[idxs]))
-   c(acc.tower,acc.cc,acc.mice)
+doExpt1 <- function (pedf,k,naCols1,naCols2) 
+{
+    require(mice)
+    nr <- nrow(pedf)
+    nc <- ncol(pedf)
+    idxs <- sample(1:nr, 500)
+    lmo <- lm(wageinc ~ ., data = pedf[-idxs, ])
+    ftd <- lmo$fitted.values
+    newx <- pedf[idxs,-nc]
+    newx.cc <- newx
+    newx[1:250,naCols1] <- NA
+    newx[251:500,naCols2] <- NA
+    print(system.time(pred.tower <- toweranNA(pedf[-idxs, -nc], 
+        ftd, 10, newx)))
+    pred.cc <- predict(lmo, newx.cc)
+    acc.tower <- mean(abs(pred.tower - pedf$wageinc[idxs]))
+    acc.cc <- mean(abs(pred.cc - pedf$wageinc[idxs]))
+    pedf2 <- rbind(pedf[-idxs, -nc], newx)
+    print(system.time(miceout <- mice(pedf2, m = 1, maxit = 50, 
+        meth = "pmm", printFlag = F)))
+    print(system.time(pedf3 <- complete(miceout)))
+    newx.mice <- pedf3[(nrow(pedf3) - 499):nrow(pedf3), ]
+    pred.mice <- predict(lmo, newx.mice)
+    acc.tower <- mean(abs(pred.tower - pedf$wageinc[idxs]))
+    acc.cc <- mean(abs(pred.cc - pedf$wageinc[idxs]))
+    acc.mice <- mean(abs(pred.mice - pedf$wageinc[idxs]))
+    c(acc.tower, acc.cc, acc.mice)
+}
+   
 }                                                                                                     
