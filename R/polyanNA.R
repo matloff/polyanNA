@@ -442,4 +442,4 @@ doExpt1 <- function (newPE,k,naCols1,naCols2)
     c(acc.tower, acc.cc, acc.mice)
 }
    
-}                                                                                                     
+                                                                                                    
