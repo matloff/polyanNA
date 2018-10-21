@@ -379,7 +379,7 @@ lm.pa.ex2 <- function()
 toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE) 
 {
    if (sum(is.na(x)) > 0)
-      stop('x must be NA-free; call complete.cases()'
+      stop('x must be NA-free; call complete.cases()')
    require(FNN)
    nc <- ncol(x)
    if (scaleX) {
