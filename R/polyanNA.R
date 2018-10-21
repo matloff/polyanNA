@@ -403,43 +403,49 @@ toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE)
    preds
 }
 
-# experiments with the prgeng data, pe, obtained via the call
-# getPE(Dummies=T); choose which predictors are desired, and submit that
-# thinned-out version of pe as newPE; training and test sets are
-# generated, the latter of size 500 cases; the first 250 will have cols
-# naCols1 set to NA, and the rest will have the same for cols naCols2;
-# the Tower method will use k nearest neighbors
+###########################  doExpt1()  ###############################
 
-doExpt1 <- function (newPE,k,naCols1,naCols2) 
+# arguments:
+
+#    inputDF:  input data frame, response variable in last col
+#    naCols1:  1st set of cols in which to insert NAs
+#    naCols2:  2nd set of cols in which to insert NAs
+#    k:  number of nearest neighbors
+
+# training and test sets are generated, the latter of size 500 cases; in
+# the latter, the first 250 will have cols naCols1 set to NA, and the
+# rest will have the same for cols naCols2; the Tower method will use k
+# nearest neighbors
+
+doExpt1 <- function (inputDF,naCols1,naCols2,k=1)
 {
     require(mice)
-    nr <- nrow(newPE)
-    nc <- ncol(newPE)
+    nr <- nrow(inputDF)
+    nc <- ncol(inputDF)
     idxs <- sample(1:nr, 500)
-    lmo <- lm(wageinc ~ ., data = newPE[-idxs, ])
+    lmo <- lm(wageinc ~ ., data = inputDF[-idxs, ])
     ftd <- lmo$fitted.values
-    newx <- newPE[idxs,-nc]
-    newx.full <- newx  # full data, no NAs
+    newx <- inputDF[idxs,-nc]
+    ## newx.full <- newx  # full data, no NAs
     newx[1:250,naCols1] <- NA
     newx[251:500,naCols2] <- NA
-    print(system.time(pred.tower <- toweranNA(newPE[-idxs,-nc], 
+    print(system.time(pred.tower <- toweranNA(inputDF[-idxs,-nc], 
         ftd,k,newx)))
-    pred.full <- predict(lmo, newx.full)
+    ## pred.full <- predict(lmo, newx.full)
     # now prepare for using mice; combine the training X data with newx,
-    # yielding the original X data in newPE except for the insertion of
+    # yielding the original X data in inputDF except for the insertion of
     # NAs; the training data is then helping mice fill in the NAs
-    newPE2 <- rbind(newPE[-idxs,-nc], newx)
-    print(system.time(miceout <- mice(newPE2,m=1,maxit=50, 
+    inputDF2 <- rbind(inputDF[-idxs,-nc], newx)
+    print(system.time(miceout <- mice(inputDF2,m=1,maxit=50, 
         meth="pmm", printFlag=F)))
-    print(system.time(newPE3 <- complete(miceout)))
+    print(system.time(inputDF3 <- complete(miceout)))
     # now extract the last 500 rows, obtaining the imputed version of
     # newx
-    newx.mice <- newPE3[(nrow(newPE3) - 499):nrow(newPE3), ]
+    newx.mice <- inputDF3[(nrow(inputDF3) - 499):nrow(inputDF3), ]
     pred.mice <- predict(lmo, newx.mice)
-    acc.tower <- mean(abs(pred.tower - newPE$wageinc[idxs]))
-    acc.full <- mean(abs(pred.full - newPE$wageinc[idxs]))
-    acc.mice <- mean(abs(pred.mice - newPE$wageinc[idxs]))
-    c(acc.tower, acc.cc, acc.mice)
+    acc.tower <- mean(abs(pred.tower - inputDF$wageinc[idxs]))
+    ## acc.full <- mean(abs(pred.full - inputDF$wageinc[idxs]))
+    acc.mice <- mean(abs(pred.mice - inputDF$wageinc[idxs]))
+    c(acc.tower,acc.mice)
 }
    
-                                                                                                    
