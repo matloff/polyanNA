@@ -449,3 +449,66 @@ doExpt1 <- function (inputDF,naCols1,naCols2,k=1)
     c(acc.tower,acc.mice)
 }
    
+# experiments where the missingess is correlated.
+# Xy, a data.frame, contains complete cases only. 
+# y, the dependent variable, must be in the final column.
+# k is the number of nearest neighbors for toweranNA.
+# 500 test samples are held out (or 20\% on small data sets).
+# X is assumed multivariate normal. N_test draws are taken.
+# That creates a N_test * P matrix; if the absolute value
+# is greater than 1.64 (elementwise, not a norm for the vector)
+# it is assigned to be missing, inducing correlation.
+
+doExpt2 <- function(Xy, k, z_threshold = 1.64){
+  
+  require(mice)
+  require(mvtnorm)
+  
+  if(sum(is.na(X))) stop("Xy may not contain missing values, which are simulated by this function.")
+  
+  Xy <- as.data.frame(Xy)
+  y_name <- colnames(Xy)[ncol(Xy)]
+  X <- model.matrix(as.formula(paste(y_name, "~.")), Xy)
+  X <- X[,-1] # drop intercept
+  y <- Xy[,ncol(Xy)]
+  mmXy <- as.data.frame(cbind(X, y))
+  
+  nr <- nrow(X)
+  nc <- ncol(X)
+  idxs <- sample(nr, ifelse(nr < 500, floor(.2*nr), 500))
+  y_test <- y[idxs]
+  X_train <- X[-idxs,]
+  
+  lmo <- lm(y ~ ., data=mmXy[-idxs,])
+  ftd <- lmo$fitted.values
+  
+  newx <- X[idxs, ]
+  newx.full <- newx  # full data, no NAs
+  
+  # missing data only to newx
+  sims <- rmvnorm(length(idxs), mean = rep(0, ncol(X)), sigma = cor(X))
+  to_drop <- abs(sims) > threshold
+  newx[to_drop] <- NA
+  
+  print(system.time(pred.tower <- toweranNA(X_train, 
+                                            ftd, k, newx)))
+  pred.full <- predict(lmo, as.data.frame(newx.full))
+  
+  # now prepare for using mice; combine the training X data with newx,
+  # yielding the original X data in newPE except for the insertion of
+  # NAs; the training data is then helping mice fill in the NAs
+  newX2 <- rbind(X[-idxs,], newx)
+  print(system.time(miceout <- mice(newX2, m=1, maxit=50, 
+                                    meth="pmm", printFlag=FALSE)))
+  print(system.time(newX3 <- complete(miceout)))
+  # now extract 
+  newx.mice <- newX3[idxs, ]
+  pred.mice <- predict(lmo, newx.mice)
+  
+  acc.tower <- mean(abs(pred.tower - y_test))
+  acc.full <- mean(abs(pred.full - y_test))
+  acc.mice <- mean(abs(pred.mice - y_test))
+  c(acc.tower, acc.cc, acc.mice)
+  
+  
+}
