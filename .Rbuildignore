@@ -1,5 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-scratchwork/
-data/
-lit/
+^data$
+^experiments$
+^lit$
+^scratchwork$

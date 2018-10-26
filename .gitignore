@@ -7,3 +7,5 @@ data/
 lit/
 .DS_Store
 polyanNA.Rproj
+*.csv
+experiments/*.csv
