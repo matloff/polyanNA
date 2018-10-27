@@ -20,6 +20,8 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
   require(mice)
   require(mvtnorm)
   
+  display <- function(x) cat("\t\telapsed time:", x[3], "\n")
+  
   if(is.null(data_list)){
     
     if(sum(is.na(Xy))) 
@@ -43,21 +45,22 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
     
     newx <- X[idxs, ]
     newx.full <- newx  # full data, no NAs
+    pred.full <- predict(lmo, as.data.frame(newx.full))
     
     # missing data only to newx
     sims <- rmvnorm(length(idxs), mean = rep(0, ncol(X)), sigma = cor(X))
     to_drop <- abs(sims) > threshold
     newx[to_drop] <- NA
     
-    cat("calling toweranNA...\n")
+    cat("\n\tcalling toweranNA...\n")
     acc.tower <- NA
-    tried <- try(print(system.time(pred.tower <- toweranNA(X_train, 
-                                                           ftd, k, newx))))
+    tried <- try(tower.time <- system.time(pred.tower <- toweranNA(X_train, 
+                                                           ftd, k, newx)))
     if(inherits(tried, "try-error")){
       cat("\n\nError attempting to call toweranNA. details\n\n")
       print(tried)
     }else{
-      pred.full <- predict(lmo, as.data.frame(newx.full))
+      display(tower.time)
       acc.tower <- mean(abs(pred.tower - y_test))
     }
     
@@ -65,10 +68,12 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
     # yielding the original X data in newPE except for the insertion of
     # NAs; the training data is then helping mice fill in the NAs
     newX2 <- rbind(X[-idxs,], newx)
-    cat("calling mice...\n")
-    print(system.time(miceout <- mice(newX2, m=1, maxit=50, 
-                                      meth="pmm", printFlag=FALSE)))
-    print(system.time(newX3 <- complete(miceout)))
+    cat("\n\tcalling mice...\n")
+    mice.time <- system.time(miceout <- mice(newX2, m=1, maxit=50, 
+                                             meth="pmm", printFlag=FALSE))
+    display(mice.time)
+    
+    newX3 <- complete(miceout)
     # now extract 
     newx.mice <- newX3[idxs, ]
     pred.mice <- predict(lmo, newx.mice)
@@ -113,22 +118,26 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
     to_drop <- abs(sims) > threshold
     newx[to_drop] <- NA
     
-    cat("calling toweranNA...\n")
+    cat("\n\tcalling toweranNA...\n")
     acc.tower <- NA
-    tried <- try(print(system.time(pred.tower <- toweranNA(data_list$Xy_train[,-y_col], 
-                                                           ftd, k, newx))))
+    
+    tried <- try(tower.time <- system.time(pred.tower <- toweranNA(data_list$Xy_train[,-y_col], 
+                                                                   ftd, k, newx)))
+    
     if(inherits(tried, "try-error")){
       cat("\n\nError attempting to call toweranNA. details\n\n")
       print(tried)
     }else{
+      display(tower.time[3])
       acc.tower <- mean(abs(pred.tower - y_test))
     }
     
-    cat("calling mice...\n")
+    cat("\n\tcalling mice...\n")
     newX2 <- rbind(data_list$Xy_train[,-y_col], newx)
-    print(system.time(miceout <- mice(newX2, m=1, maxit=50, 
-                                      meth="pmm", printFlag=FALSE)))
-    print(system.time(newX3 <- complete(miceout)))
+    mice.time <- system.time(miceout <- mice(newX2, m=1, maxit=50, 
+                                meth="pmm", printFlag=FALSE))
+    print(mice.time)
+    newX3 <- complete(miceout)
     # now extract 
     newx.mice <- newX3[-c(1:nrow(data_list$Xy_train)), ]
     pred.mice <- predict(lmo, newx.mice)
@@ -137,9 +146,10 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
     acc.mice <- mean(abs(pred.mice - y_test))
     
   }
-  out <- list(acc.tower=acc.tower, acc.full=acc.full, acc.mice=acc.mice)
+  out <- list(acc.tower=acc.tower, acc.full=acc.full, acc.mice=acc.mice, 
+              tower.time=tower.time[3], mice.time=mice.time[3])
   cat("\n\nMAPE (sorted):\n")
-  print(sort(unlist(out)))
+  print(sort(unlist(out)[1:3]))
   return(out)
   
 }
