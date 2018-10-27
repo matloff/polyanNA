@@ -394,7 +394,8 @@ toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE)
       ic <- intactCols
       rw <- rw[ic]
       if (scaleX) {
-         rw <- scale(matrix(rw, nrow=1),center=xmns[ic],scale=xsds[ic])
+         # rw <- scale(matrix(rw, nrow=1),center=xmns[ic],scale=xsds[ic])
+         rw <- scale(as.matrix(rw),center=xmns[ic],scale=xsds[ic])
       }
       tmp <- FNN::get.knnx(data = x[,ic],query = rw, k = k)
       nni <- tmp$nn.index
@@ -458,8 +459,10 @@ miceFit <- function(oldx,newx,maxit=50,meth='pmm',printFlag=F) {
 }
 
 # general comparison of toweranNA() and mice(); the data frame xy must
-# have Y in last col; 'holdout' rows for the test set; naAdder(), if
-# non-NULL, injects NAs; k is the number of nearest neighbors
+# have Y in last col; saves 'holdout' random rows for the test set;
+# naAdder(), if non-NULL, injects NAs into xy; k is the number of
+# nearest neighbors
+
 doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5) {
    if (!is.null(naAdder)) xy <- naAdder(xy)
    nr <- nrow(xy)
@@ -467,8 +470,9 @@ doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5) {
    idxs <- sample(1:nr,holdout)
    xytrain <- xy[-idxs,]
    xytest <- xy[idxs,]
+   # want to see how well predict NA cases
    cc <- complete.cases(xytest)
-   xytest <- xytest[-cc,]  # want to see how well predict NA cases
+   xytest <- xytest[-which(cc),]  
    # toweranNA() code
    frml <- paste(names(xy)[nc],' ~ .',sep='')
    frml <- as.formula(frml)
@@ -481,4 +485,14 @@ doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5) {
       pred.tower <- toweranNA(xytraincc[,-nc],ftd,k,xytest[,-nc])
    ))
    # mice code
+   bigx <- rbind(xytrain[,-nc],xytest[,-nc])  # rbind new X with old X
+   print(system.time(
+       miceout <- mice(bigx,m=1,maxit=50,meth='pmm',printFlag=F)
+   ))
+   tmp <- complete(miceout)
+   testmice <- tmp[-(1:nrow(xytrain)),-nc]  # remove old X
+   pred.mice <- predict(lmo,testmice)
+   mt <- mean(abs(pred.tower - xytest[,nc]))
+   mm <- mean(abs(pred.mice - xytest[,nc]))
+   c(mt,mm)
 }
