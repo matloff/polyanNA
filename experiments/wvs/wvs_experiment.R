@@ -4,8 +4,7 @@
 # wvs <- read.csv("experiments/wvs.csv", stringsAsFactors = FALSE)
 # source("experiments/wvs/wvs_csv_to_country_data_frames.R")
 
-X <- wvs %>% select(country, birthyear, edu, 
-                    income_bracket,
+X <- wvs %>% select(country, birthyear, edu, income_bracket,
                     contains("econ_attitudes"))
 W <- wvs %>% select(region, religion)
 wv <- wvs_make_data(wvs$rightist, X, W)
@@ -16,8 +15,8 @@ wv$countries
 lapply(wv, function(country) lapply(country, dim))
 
 N_countries <- length(wv$countries)
-tmp <- matrix(nrow=N_countries, ncol=3)
-dimnames(tmp) <- list(wv$countries, c("tower", "full", "mice"))
+tmp <- matrix(nrow=N_countries, ncol=5)
+dimnames(tmp) <- list(wv$countries, c("tower", "full", "mice", "tower.time", "mice.time"))
 results <- data.frame(tmp)
 
 seed <- 1
@@ -39,7 +38,8 @@ for(i in 1:length(wv$countries)){
     
   }
   
-}
+} 
+
 results$seed <- wv$seed
 results$metric <- "MAPE"
 colMeans(results[,1:3], na.rm=TRUE)
