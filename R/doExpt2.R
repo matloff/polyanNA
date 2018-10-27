@@ -75,10 +75,7 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
     
     acc.full <- mean(abs(pred.full - y_test))
     acc.mice <- mean(abs(pred.mice - y_test))
-    cat("\n\n\nRESULTS:\nacc.tower:", acc.tower, "\nacc.full:", acc.full, 
-        "\nacc.mice:", acc.mice)
-    return(c(acc.tower, acc.full, acc.mice))
-    
+
   }else{
     
     `%out%` <- function(x, table) match(x, table, nomatch = 0L) == 0L
@@ -138,10 +135,10 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
     y_test <- unlist(data_list$y_test)
     acc.full <- mean(abs(pred.full - y_test))
     acc.mice <- mean(abs(pred.mice - y_test))
-    cat("\n\n\nRESULTS:\nacc.tower:", acc.tower, "\nacc.full:", acc.full, 
-        "\nacc.mice:", acc.mice)
-    return(c(acc.tower, acc.full, acc.mice))
     
   }
+  out <- list(acc.tower=acc.tower, acc.full=acc.full, acc.mice=acc.mice)
+  print(out)
+  return(out)
   
 }
