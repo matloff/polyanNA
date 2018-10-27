@@ -394,7 +394,7 @@ toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE)
       ic <- intactCols
       rw <- rw[ic]
       if (scaleX) {
-         rw <- scale(rw,center=xmns[ic],scale=xsds[ic])
+         rw <- scale(matrix(rw, nrow=1),center=xmns[ic],scale=xsds[ic])
       }
       tmp <- FNN::get.knnx(data = x[,ic],query = rw, k = k)
       nni <- tmp$nn.index

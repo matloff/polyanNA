@@ -99,6 +99,7 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
     newx <- as.matrix(data_list$X_test)
     newx <- newx[,-which(colnames(data_list$X_test) %out% colnames(data_list$Xy_train[,-y_col]))]
     newx.full <- newx  # full data, no NAs
+    y_test <- unlist(data_list$y_test)
     
     # mice() doesn't seem to like specials in col names...
     colnames(data_list$Xy_train)[-y_col] <- paste0("x", 1:nc)
@@ -132,13 +133,13 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
     newx.mice <- newX3[-c(1:nrow(data_list$Xy_train)), ]
     pred.mice <- predict(lmo, newx.mice)
     
-    y_test <- unlist(data_list$y_test)
     acc.full <- mean(abs(pred.full - y_test))
     acc.mice <- mean(abs(pred.mice - y_test))
     
   }
   out <- list(acc.tower=acc.tower, acc.full=acc.full, acc.mice=acc.mice)
-  print(out)
+  cat("\n\nMAPE (sorted):\n")
+  print(sort(unlist(out)))
   return(out)
   
 }
