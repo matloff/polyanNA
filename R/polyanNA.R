@@ -448,4 +448,37 @@ doExpt1 <- function (inputDF,naCols1,naCols2,k=1)
     acc.mice <- mean(abs(pred.mice - inputDF$wageinc[idxs]))
     c(acc.tower,acc.mice)
 }
-   
+
+miceFit <- function(oldx,newx,maxit=50,meth='pmm',printFlag=F) {
+   require(mice)
+   bigx <- rbind(oldx,newx)
+   miceout <- mice(bigx,m=1,maxit=50,meth='pmm',printFlag=F)
+   tmp <- complete(miceout)
+   tmp[-(1:nrow(oldx)),]
+}
+
+# general comparison of toweranNA() and mice(); the data frame xy must
+# have Y in last col; 'holdout' rows for the test set; naAdder(), if
+# non-NULL, injects NAs; k is the number of nearest neighbors
+doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5) {
+   if (!is.null(naAdder)) xy <- naAdder(xy)
+   nr <- nrow(xy)
+   nc <- ncol(xy)
+   idxs <- sample(1:nr,holdout)
+   xytrain <- xy[-idxs,]
+   xytest <- xy[idxs,]
+   cc <- complete.cases(xytest)
+   xytest <- xytest[-cc,]  # want to see how well predict NA cases
+   # toweranNA() code
+   frml <- paste(names(xy)[nc],' ~ .',sep='')
+   frml <- as.formula(frml)
+   lmo <- lm(frml,data = xytrain)
+   ftd <- lmo$fitted.values
+   # since FNN won't allow NAs, use only complete cases in training set
+   # when calling toweranNA()
+   xytraincc <- xytrain[complete.cases(xytrain),]
+   print(system.time(
+      pred.tower <- toweranNA(xytraincc[,-nc],ftd,k,xytest[,-nc])
+   ))
+   # mice code
+}
