@@ -46,8 +46,11 @@ wvs_make_data <- function(y, X, W=NULL, noisy=TRUE, N_min=50){
   for(i in 1:ncol(X)){
     if(is.factor(X[,i]))
       X[,i] <- as.character(X[,i])
-    if(is.character(X[,i]))
+    if(is.character(X[,i])){
       X[,i] <- gsub(" ", "_", X[,i])
+      X[,i] <- gsub(":", "_", X[,i])
+    }
+      
   }
   
   N <- nrow(wvs)
