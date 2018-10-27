@@ -148,7 +148,7 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
   }
   out <- list(acc.tower=acc.tower, acc.full=acc.full, acc.mice=acc.mice, 
               tower.time=tower.time[3], mice.time=mice.time[3])
-  cat("\n\nMAPE (sorted):\n")
+  cat("\n\n\t\tMAPE (sorted):\n")
   print(sort(unlist(out)[1:3]))
   return(out)
   

@@ -14,36 +14,48 @@ wv$countries
 # inspect data dimensions by country
 lapply(wv, function(country) lapply(country, dim))
 
-N_countries <- length(wv$countries)
-tmp <- matrix(nrow=N_countries, ncol=5)
-dimnames(tmp) <- list(wv$countries, c("tower", "full", "mice", "tower.time", "mice.time"))
-results <- data.frame(tmp)
-
-seed <- 1
-set.seed(seed)
-for(i in 1:length(wv$countries)){
+# doExpt2 for all countries, found in 'wv' (assumed formatted as above)
+# the `...` passes additional arguments to doExpt2()
+# for example, 
+# batch_Expt2(12345, wv, k = 7) 
+batch_Expt2 <- function(seed, wv, ...){
   
-  cat("starting:", wv$countries[i], "\n\n")
+  N_countries <- length(wv$countries)
+  tmp <- matrix(nrow=N_countries, ncol=5)
+  dimnames(tmp) <- list(wv$countries, c("tower", "full", "mice", "tower.time", "mice.time"))
+  results <- data.frame(tmp)
+  cat("seed:", seed, "\n")
+  set.seed(seed)
+  for(i in 1:length(wv$countries)){
+    
+    cat("starting:", wv$countries[i], "\n\n")
+    
+    tried <- try(out <- doExpt2(wv[[wv$countries[i]]]), ...) # could do parLapply(wv$countries, doExpt2)
+    if(!inherits(tried, "try-error")){
+      
+      results[i, ] <- out
+      cat("\nfinished:", wv$countries[[i]], "\n\n")
+      
+    }else{
+      
+      cat("\n something went wrong with ", wv$countries[[i]], "\n")
+      print(tried)
+      
+    }
+    
+  } 
   
-  tried <- try(out <- doExpt2(wv[[wv$countries[i]]])) # could do parLapply(wv$countries, doExpt2)
-  if(!inherits(tried, "try-error")){
-    
-    results[i, ] <- out
-    cat("\nfinished:", wv$countries[[i]], "\n\n")
-
-  }else{
-    
-    cat("\n something went wrong with ", wv$countries[[i]], "\n")
-    print(tried)
-    
-  }
+  results$seed <- wv$seed
+  results$metric <- "MAPE"
+  results$tower_better <- results$tower < results$mice
   
-} 
+  cat("countries completed without error:", sum(!is.na(results$tower)), "out of ", length(wv$countries))
+  cat("countries which encountered a problem:", wv$countries[is.na(results$tower)])
+  print(colMeans(results[,1:3], na.rm=TRUE))
+  print(table(results$tower_better))
+  
+  return(results)
+  
+}
 
-results$seed <- wv$seed
-results$metric <- "MAPE"
-colMeans(results[,1:3], na.rm=TRUE)
-# tower     full     mice 
-#1.770703 1.871491 1.890475
-sum(!is.na(results$tower)) # 46 countries, seed 1
-table(results$tower < results$mice) # tower better than mice 36 out of 46, seed 1
+results <- lapply(1:5, batch_Expt2, wv)
