@@ -50,7 +50,7 @@ batch_Expt2 <- function(seed, wv, ...){
   results$tower_better <- results$tower < results$mice
   
   cat("countries completed without error:", sum(!is.na(results$tower)), "out of ", length(wv$countries))
-  cat("countries which encountered a problem:", wv$countries[is.na(results$tower)])
+  cat("countries which encountered a problem:", wv$countries[is.na(results$tower)], "\n")
   print(colMeans(results[,1:3], na.rm=TRUE))
   print(table(results$tower_better))
   
@@ -58,4 +58,3 @@ batch_Expt2 <- function(seed, wv, ...){
   
 }
 
-results <- lapply(1:5, batch_Expt2, wv)

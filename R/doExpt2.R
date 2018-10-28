@@ -128,7 +128,7 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
       cat("\n\nError attempting to call toweranNA. details\n\n")
       print(tried)
     }else{
-      display(tower.time[3])
+      display(tower.time)
       acc.tower <- mean(abs(pred.tower - y_test))
     }
     
@@ -136,7 +136,7 @@ doExpt2 <- function(data_list=NULL, Xy=NULL, k=5, threshold = 1.64){
     newX2 <- rbind(data_list$Xy_train[,-y_col], newx)
     mice.time <- system.time(miceout <- mice(newX2, m=1, maxit=50, 
                                 meth="pmm", printFlag=FALSE))
-    print(mice.time)
+    display(mice.time)
     newX3 <- complete(miceout)
     # now extract 
     newx.mice <- newX3[-c(1:nrow(data_list$Xy_train)), ]
