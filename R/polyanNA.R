@@ -393,9 +393,12 @@ toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE)
       intactCols <- which(!is.na(rw))
       ic <- intactCols
       rw <- rw[ic]
+      # kludgy but if x is a data frame get problems with scale()
+      rwm <- as.matrix(rw)
+      rwm <- matrix(rwm,nrow=1)
       if (scaleX) {
          # rw <- scale(matrix(rw, nrow=1),center=xmns[ic],scale=xsds[ic])
-         rw <- scale(as.matrix(rw),center=xmns[ic],scale=xsds[ic])
+         rw <- scale(rwm,center=xmns[ic],scale=xsds[ic])
       }
       tmp <- FNN::get.knnx(data = x[,ic],query = rw, k = k)
       nni <- tmp$nn.index
@@ -450,6 +453,9 @@ doExpt1 <- function (inputDF,naCols1,naCols2,k=1)
     c(acc.tower,acc.mice)
 }
 
+# temporarily combine X from training set with X to be predicted, so as
+# to make mice() more effective on the latter; after NAs replaced,
+# remove the old X
 miceFit <- function(oldx,newx,maxit=50,meth='pmm',printFlag=F) {
    require(mice)
    bigx <- rbind(oldx,newx)
@@ -485,12 +491,15 @@ doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5) {
       pred.tower <- toweranNA(xytraincc[,-nc],ftd,k,xytest[,-nc])
    ))
    # mice code
-   bigx <- rbind(xytrain[,-nc],xytest[,-nc])  # rbind new X with old X
+##    bigx <- rbind(xytrain[,-nc],xytest[,-nc])  # rbind new X with old X
+##    print(system.time(
+##        miceout <- mice(bigx,m=1,maxit=50,meth='pmm',printFlag=F)
+##    ))
+##    tmp <- complete(miceout)
+##    testmice <- tmp[-(1:nrow(xytrain)),-nc]  # remove old X
    print(system.time(
-       miceout <- mice(bigx,m=1,maxit=50,meth='pmm',printFlag=F)
+      testmice <- miceFit(xytrain[,-nc],xytest[,-nc])
    ))
-   tmp <- complete(miceout)
-   testmice <- tmp[-(1:nrow(xytrain)),-nc]  # remove old X
    pred.mice <- predict(lmo,testmice)
    mt <- mean(abs(pred.tower - xytest[,nc]))
    mm <- mean(abs(pred.mice - xytest[,nc]))
