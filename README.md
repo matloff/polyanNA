@@ -298,7 +298,9 @@ The function **doGenExpt()** allows one to explore the behavior of the
 Tower Method on real data.  Here we again look at the Census data,
 predicting wage income from age, gender, weeks worked, education and
 occupation, artificially injecting NA values for gender in a random 20%
-of the data:
+of the data.  This is a nontrival NA pattern, since (a) most cases are
+men and (b) conditional on all the predictor variables, women have lower
+wages than comparable men.
 
 ``` R
 pe1 <- pe[,c(1,2,4,6,7,12:16,3)]
