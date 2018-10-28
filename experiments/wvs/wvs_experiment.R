@@ -52,9 +52,28 @@ batch_Expt2 <- function(seed, wv, ...){
   cat("countries completed without error:", sum(!is.na(results$tower)), "out of ", length(wv$countries))
   cat("countries which encountered a problem:", wv$countries[is.na(results$tower)], "\n")
   print(colMeans(results[,1:3], na.rm=TRUE))
+  cat("\n")
   print(table(results$tower_better))
   
   return(results)
   
 }
+
+batch <- list()
+seeds <- 1:25
+for(i in seeds){
+  batch[[i]] <- batch_Expt2(i, wv)
+  save(batch, file = "batch.Rdata")
+}
+
+results <- do.call(rbind, batch)
+results$country <- gsub("[[:digit:]]", "", rownames(results))
+rownames(results) <- paste0(results$country, "_", results$seed)
+
+write.csv(results, file="wvs_results.csv", row.names = FALSE)
+
+
+
+
+
 
