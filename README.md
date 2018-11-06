@@ -7,9 +7,8 @@ Novel, **nonimputational**  methods for handling missing values (MVs) in
 
 ## Overview
 
-The intended class of applications is regression modeling, at this time
-linear and generalized linear models (nonparametric/ML models to be
-included later).  
+The intended class of applications is regression modeling, including
+both linear/generalized linear models and nonparametric/ML methods. 
 
 Most of the MV literature, both in the statistics and machine learning
 realms, concerns estimation of some relationship,  say estimation of
@@ -18,19 +17,20 @@ is on prediction, especially relevant in this era of Big Data.  The main
 contribution of this package is a novel technique that we call the Tower
 Method, which is directly aimed at prediction. It is nonimputational.  
 
-Note that one important point about distinguishing the estimation and
-prediction cases concerns assumptions.  Most MV methods (including ours)
-make strong assumptions, which are difficult or impossible to verify.
-We posit that the prediction context is more robust to assumptions
-than is estimation.  This would be similar to the non-MV setting, in
-which models can be rather questionable yet still have strong predictive
-power.
+Note that one important point about distinguishing between the
+estimation and prediction cases concerns assumptions.  Most MV methods
+(including ours) make strong assumptions, which are difficult or
+impossible to verify.  We posit that the prediction context is more
+robust to assumptions than is estimation.  This would be similar to the
+non-MV setting, in which models can be rather questionable yet still
+have strong predictive power.
 
 The large difference beween the estimation and prediction goals is
 especially clear when one notes that, in predicting new cases that have
 missing values, the classic Complete Cases method (CCM) -- use only
 fully intact rows -- is useless.  Under proper assumptions, CCM can be
-used for estimation, but it can't be used for prediction.
+used for estimation, but it can't be used for prediction of new cases
+with MVs.
 
 To make things concrete, say we are regressing Y on a vector X of length
 p.  We have data on X in a matrix A of n rows, thus of dimensions n X p.
@@ -42,9 +42,9 @@ case).
 Note carefully that in describing our methods as being for regression
 applications, *we do NOT mean imputing missing values through some
 regression technique.* Instead, our context is that of regression
-applications themselves.  Again, all of our methods are
-**nonimputational**.  (For some other nonimputational methods, see for
-instance (Soysal, 2018) and (Matloff, 2015).)
+applications themselves, with the goal being prediction.  Again, all of
+our methods are **nonimputational**.  (For some other nonimputational
+methods, see for instance (Soysal, 2018) and (Gu, 2015).)
 
 ## Contributions of This Package
 
@@ -114,8 +114,8 @@ A'B.
 *The polyanNA package*
 
 The first method offered in our **polyanNA**  package implements MIM for
-factors, both in its traditional form, and with polynomial extensions to be
-described below.
+factors, both in its traditional form, and **with polynomial
+extensions** to be described below.
 
 The **mimPrep()** function inputs a data frame and  converts all factor
 columns according to MIM.  Optionally, the function will discretize the
@@ -123,7 +123,10 @@ numeric columns as well, so that they too can be "MIM-ized."
 
 There is also a function **lm.pa()**, with an associated method for the
 generic **predict()**, to implement linear modeling and prediction in
-MIM settings, including polynomial MIM.
+MIM settings, including polynomial MIM (latter not yet implemented). The
+point of forming polynomials is that, while MIM takes into accounting
+singlet missingnesss, products of these dummy variables then account for
+pair missingness, triplet missingness and so on.
 
 *Example* 
 
@@ -132,32 +135,24 @@ data on programmer and engineer wages in 2000.  It regresses WageIncome
 against Age, Education, Occupation, Gender, and WeeksWorked.
 
 We intentionally inject NA values in the Occupation variable,
-specifically in about 10% of the cases in which Occupation has code 102,
-one of the higher-paying categories:  
+specifically in about 10% of the cases in which Occupation has code 102.
+This pattern was motivated by the fact that 102 is one of the
+higher-paying categories:  
 
-```
+<pre>
 > tapply(pe$wageinc,pe$occ,mean)
      100      101      102      106      140      141 
 50396.47 51373.53 68797.72 53639.86 67019.26 69494.44 
-```
-
-In this (artificial) setting, the missingness of Occupation tells us
-that the actual value 102 or 104.
+</pre>
 
 This experiment is interesting because the proportion of women in those
 two occupations is low:
 
-```
+<pre>
 > table(pe[,c(5,7)])
-     sex
-occ      0    1
-  100 1530 3062
-  101 1153 3345
-  102 1607 5213
-  106  209  292
-  140  127  675
-  141  282 2595
-```
+     sex occ      0    1 100 1530 3062 101 1153 3345 102 1607 5213 106
+209  292 140  127  675 141  282 2595 
+</pre>
 
 Due to the fact that there are fewer women in occupations 102 and 140, two
 high-paying occupations, a naive regression analysis using CCM might bias
@@ -357,6 +352,9 @@ Variables in Multiple Linear Regression, *JASA*m 1996
 
 O.S. Miettinen, *Theoretical Epidemiology:
 Principles of Occurrence Research in Medicine*, 1985
+
+U. Nur *et al*, Modelling relative survival in the presence of
+incomplete data: a tutorial, Int. J. *Epidemiology*, 2010
 
 S. Soysal *et al*, the Effects of Sample Size and Missing Data Rates on
 Generalizability Coefficients, *Eurasian J. of Ed. Res.*, 2018
