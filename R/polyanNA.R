@@ -18,11 +18,11 @@
 #    yCol: column number of Y, needed in training case
 #    breaks: if non-NULL, number of desired levels in discretized 
 #       vectors (not counting added 'na')
-#    allCodeInfo: in the new-data case, an R list, obtained via a call
-#    to mimPrep() in the training data (else NULL), one element for 
-#       each column of X; the element is NULL unless that column had 
-#       been discretized in the original, in which it is the codeInfo
-#       attribute from that operation 
+#    allCodeInfo: in the new-data case, an R list, obtained via a 
+#       previous call to to mimPrep() in the training data (else NULL); 
+#       one element for each column of X; the element is NULL 
+#       unless that column had been discretized in the original, in 
+#       which it is the codeInfo attribute from that operation 
 
 # we'll use x here to refer to xy without the Y column, if any
 
