@@ -4,4 +4,5 @@ export(lm.pa)
 export(mimPrep)
 export(toweranNA)
 export(factorsToDummies)
+export(doGenExpt)
 
