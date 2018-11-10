@@ -508,39 +508,42 @@ doExpt1 <- function (xy, naAdder = NULL, holdout = 1000, k = 5, regftn = lm)
     c(mt, mm) 
 } 
 
-doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5) {
-   if (!is.null(naAdder)) xy <- naAdder(xy)
-   nr <- nrow(xy)
-   nc <- ncol(xy)
-   idxs <- sample(1:nr,holdout)
-   xytrain <- xy[-idxs,]
-   xytest <- xy[idxs,]
-   # want to see how well predict NA cases
-   cc <- complete.cases(xytest)
-   xytest <- xytest[-which(cc),]  
-   # toweranNA() code
-   frml <- paste(names(xy)[nc],' ~ .',sep='')
-   frml <- as.formula(frml)
-   lmo <- lm(frml,data = xytrain)
-   ftd <- lmo$fitted.values
-   # since FNN won't allow NAs, use only complete cases in training set
-   # when calling toweranNA()
-   xytraincc <- xytrain[complete.cases(xytrain),]
-   print(system.time(
-      pred.tower <- toweranNA(xytraincc[,-nc],ftd,k,xytest[,-nc])
-   ))
-   # mice code
-##    bigx <- rbind(xytrain[,-nc],xytest[,-nc])  # rbind new X with old X
-##    print(system.time(
-##        miceout <- mice(bigx,m=1,maxit=50,meth='pmm',printFlag=F)
-##    ))
-##    tmp <- complete(miceout)
-##    testmice <- tmp[-(1:nrow(xytrain)),-nc]  # remove old X
-   print(system.time(
-      testmice <- miceFit(xytrain[,-nc],xytest[,-nc])
-   ))
-   pred.mice <- predict(lmo,testmice)
-   mt <- mean(abs(pred.tower - xytest[,nc]))
-   mm <- mean(abs(pred.mice - xytest[,nc]))
-   c(mt,mm)
+doGenExpt <- function (xy, naAdder = NULL, holdout = 1000, k = 5, regftn = lm)
+{
+    if (!is.null(naAdder))
+        xy <- naAdder(xy)
+    nr <- nrow(xy)
+    nc <- ncol(xy)
+    idxs <- sample(1:nr, holdout)
+    xytrain <- xy[-idxs, ]
+    xytest <- xy[idxs, ]
+    cc <- complete.cases(xytest)
+    xytest <- xytest[-which(cc), ]
+    frml <- paste(names(xy)[nc], " ~ .", sep = "")
+    frml <- as.formula(frml)
+    if (identical(regftn,lm)) {
+       lmo <- lm(frml, data = xytrain)
+    } else {
+       lmo <- glm(frml, data = xytrain, family=binomial)
+    } 
+    ftd <- lmo$fitted.values
+    xytraincc <- xytrain[complete.cases(xytrain), ]
+    print(system.time(pred.tower <- 
+       toweranNA(xytraincc[, -nc], ftd, k, xytest[, -nc])))
+    if (identical(regftn,glm))
+       pred.tower <- round(pred.tower)
+    print(system.time(testmice <- miceFit(xytrain[,-nc],                               xytest[,-nc])))
+    if (identical(regftn,lm)) {
+       pred.mice <- predict(lmo, testmice) 
+       mt <- mean(abs(pred.tower - xytest[, nc]))
+       mm <- mean(abs(pred.mice - xytest[, nc]))
+    } else {
+       pred.mice <- round(predict(lmo, testmice,type='response'))
+       mt <- mean(pred.tower == xytest[, nc])
+       mm <- mean(pred.mice == xytest[, nc])
+    }
+
+    c(mt, mm)
 }
+
+
