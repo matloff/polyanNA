@@ -6,11 +6,19 @@
 # arguments:
 
 #    x: matrix/data frame of "X" values, all complete cases
-#    fittedReg: fitted regression values, e.g. from lm() output,
-#       corresponding to xc
+#    fittedReg: fitted regression values; see below 
 #    k: number of nearest neighbors
 #    scaleX: scale xc and newx before prediction
 #    newx: matrix/data frame of new "X" values
+
+# in the case of regression or a 2-class classification problem,
+# 'fittedReg' will be the estimated regression function, evaluated at x; 
+# e.g. the compoment 'fitted.values' from lm() output
+
+# for a multiclass classification problem, 'fittedReg' will be a matrix,
+# with number of columns equal to number of classes, and number of rows
+# equal to that of 'newx'; the (i,j) element will be the estimated
+# conditional probability of that class, given row i of x
 
 # value: vector of predicted values
 
@@ -19,13 +27,20 @@ toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE)
    if (sum(is.na(x)) > 0)
       stop('x must be NA-free; call complete.cases()')
    require(FNN)
+   if (is.matrix(fittedReg) && ncol(fittedReg) == 1) 
+      fittedReg <- as.vector(fittedReg)
+   multiclass <- is.matrix(fittedReg)
    nc <- ncol(x)
    if (scaleX) {
       x <- scale(x,center=TRUE,scale=TRUE)
       xmns <- attr(x,'scaled:center')
       xsds <- attr(x,'scaled:scale')
    }
-   preds <- vector(length = nrow(newx))
+   if (!multiclass) {
+       preds <- vector(length = nrow(newx))
+   } else {
+       preds <- matrix(nrow = nrow(newx),ncol = ncol(fittedReg))
+   }
    for (i in 1:nrow(newx)) {
       rw <- newx[i,]
       intactCols <- which(!is.na(rw))
@@ -40,7 +55,11 @@ toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE)
       }
       tmp <- FNN::get.knnx(data = x[,ic],query = rw, k = k)
       nni <- tmp$nn.index
-      preds[i] <- mean(fittedReg[nni])
+      if (!multiclass) {
+         preds[i] <- mean(fittedReg[nni])
+      } else {
+         preds[i,] <- colMeans(fittedReg[nni,])
+      }
    }
    preds
 }
