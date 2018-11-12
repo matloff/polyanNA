@@ -121,51 +121,61 @@ miceFit <- function(oldx,newx,maxit=50,meth='pmm',printFlag=F) {
    tmp[-(1:nrow(oldx)),]
 }
 
-# general comparison of toweranNA() and mice(); the data frame xy must
-# have Y in last col; saves 'holdout' random rows for the test set;
-# naAdder(), if non-NULL, injects NAs into xy; k is the number of
-# nearest neighbors
+# same as miceFit but with Amelia
+ameliaFit <- function (oldx, newx) 
+{
+    require(Amelia)
+    bigx <- rbind(oldx, newx)
+    ameliaout <- amelia(bigx, m = 1)
+    tmp <- ameliaout$imputations[[1]]
+    tmp[-(1:nrow(oldx)), ]
+}
 
-doExpt1 <- function (xy, naAdder = NULL, holdout = 1000, k = 5, regftn = lm) 
-{ 
-    if (!is.null(naAdder)) 
-        xy <- naAdder(xy) 
-    nr <- nrow(xy) 
-    nc <- ncol(xy) 
-    idxs <- sample(1:nr, holdout) 
-    xytrain <- xy[-idxs, ] 
-    xytest <- xy[idxs, ] 
-    cc <- complete.cases(xytest) 
-    xytest <- xytest[-which(cc), ] 
-    frml <- paste(names(xy)[nc], " ~ .", sep = "") 
-    frml <- as.formula(frml) 
-    if (identical(regftn,lm)) { 
-       lmo <- lm(frml, data = xytrain) 
-    } else { 
-       lmo <- glm(frml, data = xytrain, family=binomial) 
-    } 
-    ftd <- lmo$fitted.values 
-    xytraincc <- xytrain[complete.cases(xytrain), ] 
-    print(system.time(pred.tower <- toweranNA(xytraincc[, -nc], 
-        ftd, k, xytest[, -nc]))) 
-    if (identical(regftn,glm)) 
-       pred.tower <- round(pred.tower) 
-    print(system.time(testmice <- miceFit(xytrain[,-nc], 
-       xytest[,-nc]))) 
-    if (identical(regftn,lm)) { 
-       pred.mice <- predict(lmo, testmice) 
-       mt <- mean(abs(pred.tower - xytest[, nc])) 
-       mm <- mean(abs(pred.mice - xytest[, nc])) 
-    } else { 
-       pred.mice <- round(predict(lmo, testmice,type='response')) 
-       mt <- mean(pred.tower == xytest[, nc]) 
-       mm <- mean(pred.mice == xytest[, nc]) 
-    } 
- 
-    c(mt, mm) 
-} 
+# # general comparison of toweranNA() and mice(); the data frame xy must
+# # have Y in last col; saves 'holdout' random rows for the test set;
+# # naAdder(), if non-NULL, injects NAs into xy; k is the number of
+# # nearest neighbors
+# 
+# doExpt1 <- function (xy, naAdder = NULL, holdout = 1000, k = 5, regftn = lm) 
+# { 
+#     if (!is.null(naAdder)) 
+#         xy <- naAdder(xy) 
+#     nr <- nrow(xy) 
+#     nc <- ncol(xy) 
+#     idxs <- sample(1:nr, holdout) 
+#     xytrain <- xy[-idxs, ] 
+#     xytest <- xy[idxs, ] 
+#     cc <- complete.cases(xytest) 
+#     xytest <- xytest[-which(cc), ] 
+#     frml <- paste(names(xy)[nc], " ~ .", sep = "") 
+#     frml <- as.formula(frml) 
+#     if (identical(regftn,lm)) { 
+#        lmo <- lm(frml, data = xytrain) 
+#     } else { 
+#        lmo <- glm(frml, data = xytrain, family=binomial) 
+#     } 
+#     ftd <- lmo$fitted.values 
+#     xytraincc <- xytrain[complete.cases(xytrain), ] 
+#     print(system.time(pred.tower <- toweranNA(xytraincc[, -nc], 
+#         ftd, k, xytest[, -nc]))) 
+#     if (identical(regftn,glm)) 
+#        pred.tower <- round(pred.tower) 
+#     print(system.time(testmice <- miceFit(xytrain[,-nc], 
+#        xytest[,-nc]))) 
+#     if (identical(regftn,lm)) { 
+#        pred.mice <- predict(lmo, testmice) 
+#        mt <- mean(abs(pred.tower - xytest[, nc])) 
+#        mm <- mean(abs(pred.mice - xytest[, nc])) 
+#     } else { 
+#        pred.mice <- round(predict(lmo, testmice,type='response')) 
+#        mt <- mean(pred.tower == xytest[, nc]) 
+#        mm <- mean(pred.mice == xytest[, nc]) 
+#     } 
+#  
+#     c(mt, mm) 
+# } 
 
-doGenExpt <- function (xy, naAdder = NULL, holdout = 1000, k = 5, regftn = lm)
+doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5,regftn=lm,imput='mice')
 {
     if (!is.null(naAdder))
         xy <- naAdder(xy)
@@ -189,15 +199,19 @@ doGenExpt <- function (xy, naAdder = NULL, holdout = 1000, k = 5, regftn = lm)
        toweranNA(xytraincc[, -nc], ftd, k, xytest[, -nc])))
     if (identical(regftn,glm))
        pred.tower <- round(pred.tower)
-    print(system.time(testmice <- miceFit(xytrain[,-nc],                               xytest[,-nc])))
-    if (identical(regftn,lm)) {
-       pred.mice <- predict(lmo, testmice) 
-       mt <- mean(abs(pred.tower - xytest[, nc]))
-       mm <- mean(abs(pred.mice - xytest[, nc]))
+    if (imput == 'mice') {
+       print(system.time(testimput <- miceFit(xytrain[,-nc],xytest[,-nc])))
     } else {
-       pred.mice <- round(predict(lmo, testmice,type='response'))
+       print(system.time(testimput <- ameliaFit(xytrain[,-nc],xytest[,-nc])))
+    }
+    if (identical(regftn,lm)) {
+       pred.imput <- predict(lmo, testimput) 
+       mt <- mean(abs(pred.tower - xytest[, nc]))
+       mm <- mean(abs(pred.imput - xytest[, nc]))
+    } else {
+       pred.imput <- round(predict(lmo, testimput,type='response'))
        mt <- mean(pred.tower == xytest[, nc])
-       mm <- mean(pred.mice == xytest[, nc])
+       mm <- mean(pred.imput == xytest[, nc])
     }
 
     c(mt, mm)
