@@ -1,0 +1,26 @@
+
+http://wordbank.stanford.edu/
+
+English.csv
+
+Predict kids' vocabularies.
+
+5 runs:
+
+96.22789 102.68347
+119.9022 122.8833
+88.14701 89.42852
+106.9840 115.2571
+102.4934 111.0918
+
+Typical run times:
+
+   user  system elapsed 
+  0.544   0.000   0.552 
+-- Imputation 1 --
+
+  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+
+   user  system elapsed 
+  0.600   0.000   0.609 
+
