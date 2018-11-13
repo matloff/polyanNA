@@ -5,6 +5,9 @@ English.csv
 
 Predict kids' vocabularies.
 
+About 29% of data frame missing (after extracting variables of
+interest).
+
 5 runs:
 
 96.22789 102.68347
