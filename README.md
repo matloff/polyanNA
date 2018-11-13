@@ -5,6 +5,15 @@
 Novel, **nonimputational**  methods for handling missing values (MVs) in
 **prediction** applications.
 
+## Contributions of This Package
+
+1. A novel approach specifically for prediction, based on the Tower 
+   Property of expected values, which we call the Tower Method.  
+
+2. Application of our package **polyreg** to develop an extension of 
+   the Missing-Indicator Method, which we call the Polynomial 
+   Missing-Indicator Method (pMIM).
+
 ## Overview
 
 The intended class of applications is regression modeling, including
@@ -13,7 +22,7 @@ both linear/generalized linear models and nonparametric/ML methods.
 Most of the MV literature, both in the statistics and machine learning
 realms, concerns estimation of some relationship,  say estimation of
 regression coefficients and the like.  By constrast, our emphasis here
-is on prediction, especially relevant in this era of Big Data.  The main
+is on **prediction**, especially relevant in this era of Big Data.  The main
 contribution of this package is a novel technique that we call the Tower
 Method, which is directly aimed at prediction. It is nonimputational.  
 
@@ -46,13 +55,124 @@ applications themselves, with the goal being prediction.  Again, all of
 our methods are **nonimputational**.  (For some other nonimputational
 methods, see for instance (Soysal, 2018) and (Gu, 2015).)
 
-## Contributions of This Package
+## toweranNA(): A novel method based on regression averaging
 
-1. A polynomial extension of the Missing-Indicator Method, which we call
-   the Polynomial Missing-Indicator Method (PMIM).
+The famous formula in probability theory,
 
-2. A novel approach specifically for prediction, based on the Tower 
-   Property of expected values, which we call the Tower Method.  
+```
+   EY = E[E(Y | X)]
+```
+
+has a more general version known as the Tower Property.  For random
+variables Y, U and V, 
+
+``` 
+   E[ E(Y|U,V) | U ] = E(Y | U) 
+``` 
+   
+What this theoretical abstraction says is that if we take the regression
+function of Y on U and V, and average it over V for fixed U, we get the
+regression function of Y on U.  
+
+If V is missing but U is known, this is very useful.  Take the Census
+data above on programmer and engineer wages, with predictors age,
+education, occupation, gender and number of weeks worked. Say we need to
+predict a case in which age and gender are missing.  Then (under proper
+assumptions), our prediction might be the estimated value of the
+regression function of wage on education, occupation and weeks worked,
+i.e. the marginal regression function of wage on those variables.
+
+Since each new observation to be predicted will likely have a different
+pattern of which variables are missing, we would need to estimate many
+marginal regression functions, which would in many applications be
+computationally infeasible.
+
+But the Tower Property provides an alternative.  It tells us that we can
+obtain the marginal regression functions from the full one.  So, we fit
+the full model to the complete cases in the data, then average that
+model over all data points whose values for education, occupation and
+weeks worked match those in the new case to be predicted.  
+
+In the Tower Property above, for a new case in which education,
+occupation and weeks worked are known while age and gender are missing,
+we would have
+
+```
+U  = (education,occupation,weeks worked)
+V = (age,gender)
+```
+
+E(Y|U) is the target marginal regression function that we wish to
+estimate and then use to predict the new case in hand.  The Tower
+Property implies that we can obtain that estimate by the averaging
+process described above.
+
+Our function **toweranNA()** ("tower analysis with NAs") takes this
+approach.  Usually, there will not be many data points having the exact
+value specified for U, so we average over a neighborhood of points near
+that value.  
+
+The call form is
+
+``` r
+toweranNA(x, fittedReg, k, newx, scaleX = TRUE) 
+```
+
+where the arguments are: the data frame of the "X" data in the
+training set; the vector of fitted regression function values from that
+set; the number of nearest neighbors; and the "X" data frame for the
+data to be predicted.
+
+The number of neighbors is of course a tuning parameter chosen by the
+analyst.  Since we are averaging fitted regression estimates, which are
+by definition already smoothed, a small value of k should work well.  
+
+*Example:*
+
+
+The function **doGenExpt()** allows one to explore the behavior of the
+Tower Method on real data.  Here we again look at the Census data,
+predicting wage income from age, gender, weeks worked, education and
+occupation, artificially injecting NA values for gender in a random 20%
+of the data.  This is a nontrival NA pattern, since (a) most cases are
+men and (b) conditional on all the predictor variables, women have lower
+wages than comparable men.
+
+<pre>
+pe1 <- pe[,c(1,2,4,6,7,12:16,3)]
+naIdxs <- sample(1:nrow(pe1),round(0.2*nrow(pe1)))
+pe1$sex[naIdxs] <- NA
+doGenExpt(pe1)
+</pre>
+
+The Mean Absolute Prediction Error results over five runs with the
+imputational package **mice** with k = 5, were:
+
+
+<pre>
+Tower    mice
+21508.97 22497.55
+22735.38 22144.87
+19909.03 20463.92
+25660.07 25681.66
+18237.15 18869.71
+</pre>
+
+Note we are only predicting the nonintact cases here, i.e. the ones with
+one or more NAs.  In the setting here, this typically involves a few
+dozen cases, so there is considerable variation from one run to the
+next.  But overall, the Tower Method did quite well, **outperforming
+mice in all cases but one**.
+
+Moreover achieving better accuracy, Tower was also **a lot
+faster**, about 0.5 seconds vs. about 13.
+
+The results with another imputational package, **Amelia** were similar,
+though **Amelia** was much faster than **mice**.  We have found,
+by the way, that on some data sets **Amelia** or **mice** file.
+
+A planned extension is to apply our **polyreg** package to the Tower
+Method.
 
 ## Extending the Missing-Indicator Method
 
@@ -214,133 +334,12 @@ value from a call to **mimPrep()**
 
 [UNDER CONSTRUCTION]
 
-## toweranNA(): A novel method based on regression averaging
-
-The famous formula in probability theory,
-
-```
-   EY = E[E(Y | X)]
-```
-
-has a more general version known as the Tower Property.  For random
-variables Y, U and V, 
-
-``` 
-   E[ E(Y|U,V) | U ] = E(Y | U) 
-``` 
-   
-What this theoretical abstraction says is that if we take the regression
-function of Y on U and V, and average it over V for fixed U, we get the
-regression function of Y on U.  
-
-If V is missing but U is known, this is very useful.  Take the Census
-data above on programmer and engineer wages, with predictors age,
-education, occupation, gender and number of weeks worked. Say we need to
-predict a case in which age and gender are missing.  Then (under proper
-assumptions), our prediction might be the estimated value of the
-regression function of wage on education, occupation and weeks worked,
-i.e. the marginal regression function of wage on those variables.
-
-Since each new observation to be predicted will likely have a different
-pattern of which variables are missing, we would need to estimate many
-marginal regression functions, which would in many applications be
-computationally infeasible.
-
-But the Tower Property provides an alternative.  It tells us that we can
-obtain the marginal regression functions from the full one.  So, we fit
-the full model to the complete cases in the data, then average that
-model over all data points whose values for education, occupation and
-weeks worked match those in the new case to be predicted.  
-
-In the Tower Property above, for a new case in which education,
-occupation and weeks worked are known while age and gender are missing,
-we would have
-
-```
-U  = (education,occupation,weeks worked)
-V = (age,gender)
-```
-
-E(Y|U) is the target marginal regression function that we wish to
-estimate and then use to predict the new case in hand.  The Tower
-Property implies that we can obtain that estimate by the averaging
-process described above.
-
-Our function **toweranNA()** ("tower analysis with NAs") takes this
-approach.  Usually, there will not be many data points having the exact
-value specified for U, so we average over a neighborhood of points near
-that value.  
-
-The call form is
-
-``` r
-toweranNA(x, fittedReg, k, newx, scaleX = TRUE) 
-```
-
-where the arguments are: the data frame of the "X" data in the
-training set; the vector of fitted regression function values from that
-set; the number of nearest neighbors; and the "X" data frame for the
-data to be predicted.
-
-The number of neighbors is of course a tuning parameter chosen by the
-analyst.  Since we are averaging fitted regression estimates, which are
-by definition already smoothed, a small value of k should work well.  
-
-*Example:*
-
-
-The function **doGenExpt()** allows one to explore the behavior of the
-Tower Method on real data.  Here we again look at the Census data,
-predicting wage income from age, gender, weeks worked, education and
-occupation, artificially injecting NA values for gender in a random 20%
-of the data.  This is a nontrival NA pattern, since (a) most cases are
-men and (b) conditional on all the predictor variables, women have lower
-wages than comparable men.
-
-``` R
-pe1 <- pe[,c(1,2,4,6,7,12:16,3)]
-naIdxs <- sample(1:nrow(pe1),round(0.2*nrow(pe1)))
-pe1$sex[naIdxs] <- NA
-doGenExpt(pe1)
-```
-
-The Mean Absolute Prediction Error results over five runs,
-with k = 5, were:
-
-
-```
-Tower    mice
-21508.97 22497.55
-22735.38 22144.87
-19909.03 20463.92
-25660.07 25681.66
-18237.15 18869.71
-```
-
-Note we are only predicting the nonintact cases here, i.e. the ones with
-one or more NAs.  In the setting here, this typically involves a few
-dozen cases, so there is considerable variation from one run to the
-next.  But overall, the Tower Method did quite well, **outperforming
-mice in all cases but one**.
-
-Moreover achieving better accuracy, Tower was also **a lot
-faster**, about 0.5 seconds vs. about 13.
-
 ## Assumptions
 
 We will not precisely define assumptions underlying the above methods
 here; roughly, they are similar to those most existing methods.
 However, as noted, our view is that prediction contexts are more robust to
 assumptions, as seen in the examples above.
-
-## Utility functions in this package
-
-**factorsToDummies(df)**
-
-Inspects each column of the data frame **df**.  If a column is numeric,
-it is copies without change.  If it is a factor, it is converted to two
-or more columns of dummy variables.  Return value is the expanded
-version of **df**.
 
 ## References
 
