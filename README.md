@@ -1,7 +1,5 @@
 # polyanNA 
 
-("Polynomial Analysis with NAs")
-
 Novel, **nonimputational**  methods for handling missing values (MVs) in
 **prediction** applications.
 
@@ -16,8 +14,10 @@ Novel, **nonimputational**  methods for handling missing values (MVs) in
 
 ## Overview
 
-The intended class of applications is regression modeling, including
-both linear/generalized linear models and nonparametric/ML methods. 
+The intended class of applications is predictive modeling, rather than
+estimation.  Predictive methods of any type can be used with our Tower
+Method, including both linear/generalized linear models and
+nonparametric/ML methods. 
 
 Most of the MV literature, both in the statistics and machine learning
 realms, concerns estimation of some relationship,  say estimation of
