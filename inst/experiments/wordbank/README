@@ -27,3 +27,11 @@ Typical run times:
    user  system elapsed 
   0.600   0.000   0.609 
 
+But mice didn't run:
+
+Error in parse(text = x, keep.source = FALSE) : 
+  <text>:1:293: unexpected symbol
+1:
++birth_order.First+birth_order.Fourth+birth_order.Second+birth_order.Seventh+birth_order.Sixth+ethnicity.Asian+ethnicity.Black+ethnicity.Hispanic+ethnicity.Other+sex.Female+mom_ed.College+mom_
+
+
