@@ -26,6 +26,9 @@ toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE)
 {
    if (sum(is.na(x)) > 0)
       stop('x must be NA-free; call complete.cases()')
+   allNA <- function(w) all(is.na(w))
+   if (sum(apply(newx,1,allNA) > 0) 
+      stop('newx has a row of all NAs')
    require(FNN)
    if (is.matrix(fittedReg) && ncol(fittedReg) == 1) 
       fittedReg <- as.vector(fittedReg)
@@ -175,7 +178,8 @@ ameliaFit <- function (oldx, newx)
 #     c(mt, mm) 
 # } 
 
-doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5,regftn=lm,imput='mice')
+doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5,regftn=lm,
+   imput='mice',scaleX=TRUE)
 {
     if (!is.null(naAdder))
         xy <- naAdder(xy)
@@ -196,7 +200,8 @@ doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5,regftn=lm,imput='mice')
     ftd <- lmo$fitted.values
     xytraincc <- xytrain[complete.cases(xytrain), ]
     print(system.time(pred.tower <- 
-       toweranNA(xytraincc[, -nc], ftd, k, xytest[, -nc])))
+       toweranNA(xytraincc[, -nc], ftd, k, xytest[, -nc],
+          scaleX=scaleX)))
     if (identical(regftn,glm))
        pred.tower <- round(pred.tower)
     if (imput == 'mice') {
