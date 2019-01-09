@@ -5,7 +5,7 @@
 
 # arguments:
 
-#    x: matrix/data frame of "X" values, all complete cases
+#    x: matrix/data frame of "X" values, numeric, all complete cases
 #    fittedReg: fitted regression values; see below 
 #    k: number of nearest neighbors
 #    scaleX: scale xc and newx before prediction
@@ -26,6 +26,11 @@ toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE)
 {
    if (sum(is.na(x)) > 0)
       stop('x must be NA-free; call complete.cases()')
+   factors <- sapply(x,is.factor)
+   if (any(factors)) {
+      print('factors present in X data')
+      stop('convert using factorsToDummies()')
+   }
    allNA <- function(w) all(is.na(w))
    if (sum(apply(newx,1,allNA) > 0) 
       stop('newx has a row of all NAs')
