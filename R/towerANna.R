@@ -32,7 +32,7 @@ toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE)
       stop('convert using factorsToDummies()')
    }
    allNA <- function(w) all(is.na(w))
-   if (sum(apply(newx,1,allNA) > 0) 
+   if (sum(apply(newx,1,allNA) > 0)) 
       stop('newx has a row of all NAs')
    require(FNN)
    if (is.matrix(fittedReg) && ncol(fittedReg) == 1) 
