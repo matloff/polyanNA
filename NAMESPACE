@@ -5,4 +5,5 @@ export(mimPrep)
 export(toweranNA)
 export(factorsToDummies)
 export(doGenExpt)
+export(countnas)
 
