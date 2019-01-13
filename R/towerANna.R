@@ -190,10 +190,12 @@ doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5,regftn=lm,
         xy <- naAdder(xy)
     nr <- nrow(xy)
     nc <- ncol(xy)
+    checkConstCols(xy)
     idxs <- sample(1:nr, holdout)
     xytrain <- xy[-idxs, ]
     xytest <- xy[idxs, ]
     cc <- complete.cases(xytest)
+    if (sum(cc) == 0) stop('no complete cases in training set')
     xytest <- xytest[-which(cc), ]
     frml <- paste(names(xy)[nc], " ~ .", sep = "")
     frml <- as.formula(frml)
@@ -201,7 +203,8 @@ doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5,regftn=lm,
        lmo <- lm(frml, data = xytrain)
     } else {
        lmo <- glm(frml, data = xytrain, family=binomial)
-    } 
+    }
+    if (any(is.na(coef(lmo)))) stop('some coefs NAs'
     ftd <- lmo$fitted.values
     xytraincc <- xytrain[complete.cases(xytrain), ]
     print(system.time(pred.tower <- 
