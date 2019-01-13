@@ -204,7 +204,7 @@ doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5,regftn=lm,
     } else {
        lmo <- glm(frml, data = xytrain, family=binomial)
     }
-    if (any(is.na(coef(lmo)))) stop('some coefs NAs'
+    if (any(is.na(coef(lmo)))) stop('some coefs NAs')
     ftd <- lmo$fitted.values
     xytraincc <- xytrain[complete.cases(xytrain), ]
     print(system.time(pred.tower <- 
