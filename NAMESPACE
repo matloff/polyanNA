@@ -6,4 +6,5 @@ export(toweranNA)
 export(factorsToDummies)
 export(doGenExpt)
 export(countnas)
+export(checkConstCols)
 

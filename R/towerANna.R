@@ -53,6 +53,10 @@ toweranNA <- function(x,fittedReg,k,newx,scaleX=TRUE)
       rw <- newx[i,]
       intactCols <- which(!is.na(rw))
       ic <- intactCols
+      if (length(ic) == 0) {
+         warning('a newx row has is all NAs, skipping i')
+         next
+      }
       rw <- rw[ic]
       # kludgy but if x is a data frame get problems with scale()
       rwm <- as.matrix(rw)
@@ -195,7 +199,7 @@ doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5,regftn=lm,
     xytrain <- xy[-idxs, ]
     xytest <- xy[idxs, ]
     cc <- complete.cases(xytest)
-    if (sum(cc) == 0) stop('no complete cases in training set')
+    if (sum(cc) == nrow(xytest)) stop('all cases in training set are complete')
     xytest <- xytest[-which(cc), ]
     frml <- paste(names(xy)[nc], " ~ .", sep = "")
     frml <- as.formula(frml)
