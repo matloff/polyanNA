@@ -187,11 +187,21 @@ ameliaFit <- function (oldx, newx)
 #     c(mt, mm) 
 # } 
 
-doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5,regftn=lm,
-   imput='mice',scaleX=TRUE)
-{
-    if (!is.null(naAdder))
-        xy <- naAdder(xy)
+# arguments:
+# 
+#    xy: data, X variables first then Y variable(s)
+#    holdout:  size of test set
+#    k:  number of nearest neighbors
+#    regftn:  regression function, currently lm or glm
+#    imput:  imputation method, currently 'mice' or 'amelai'
+#    scaleX:  if TRUE, scale X first`
+#    numY:  number of components in Y, e.g. k for a k-class 
+#           classification problem
+
+doGenExpt <- function(xy,holdout=1000,k=5,regftn=lm,
+   imput='mice',scaleX=TRUE,numY=1)
+{   if (numY > 1 && identical(regftn,glm))
+       stop("can't use glm yet on vector Y")
     nr <- nrow(xy)
     nc <- ncol(xy)
     checkConstCols(xy)
@@ -199,9 +209,16 @@ doGenExpt <- function(xy,naAdder=NULL,holdout=1000,k=5,regftn=lm,
     xytrain <- xy[-idxs, ]
     xytest <- xy[idxs, ]
     cc <- complete.cases(xytest)
-    if (sum(cc) == nrow(xytest)) stop('all cases in training set are complete')
+    if (sum(cc) == nrow(xytest)) stop('all cases in test set are complete')
     xytest <- xytest[-which(cc), ]
-    frml <- paste(names(xy)[nc], " ~ .", sep = "")
+    if (numY == 1) {
+       frml <- paste(names(xy)[nc], " ~ .", sep = "")
+    } else {
+       nc <- (nc-numY+1):nc
+       ynames <- names(xy)[nc]
+       ynlist <- paste0(ynames,collapse=',')
+       frml <- paste0('cbind(',ynlist,') ~ .')
+    }
     frml <- as.formula(frml)
     if (identical(regftn,lm)) {
        lmo <- lm(frml, data = xytrain)
