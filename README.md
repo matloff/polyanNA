@@ -1,5 +1,8 @@
 # polyanNA 
 
+NOTE: THE toweranNA PORTION OF THIS REPO IS BEING MOVED TO THE NEW
+'toweranNA' REPO
+
 Novel, **nonimputational**  methods for handling missing values (MVs) in
 **prediction** applications.
 
